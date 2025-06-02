@@ -372,6 +372,7 @@ export function GigsProvider({ children }: { children: ReactNode }) {
       return { canAddGig: false, currentCount: 0, limit: 0 }; // Should not happen if called correctly
     }
     try {
+      console.log('[checkGigLimit] Using uid:', userId);
       const { data: userDetails, error: userError } = await supabase
         .from('users')
         .select('subscription_plan')

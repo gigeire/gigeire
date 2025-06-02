@@ -36,14 +36,17 @@ export default function Dashboard() {
   const handleAddGigClick = async () => {
     // Always re-run checkGigLimit synchronously before opening modal
     const limitCheck = await checkGigLimit();
-    console.log('[AddGig] checkGigLimit result:', limitCheck);
-    if (!limitCheck.canAddGig) {
-      console.log('Opening Upgrade modal');
-      setGigLimitData({ currentCount: limitCheck.currentCount, limit: limitCheck.limit });
+    const allowed = limitCheck.canAddGig;
+    const count = limitCheck.currentCount;
+    const limit = limitCheck.limit;
+    console.log("✅ Gig limit check:", { count, limit, allowed });
+    if (!allowed) {
+      console.log("🔒 Showing Upgrade modal");
+      setGigLimitData({ currentCount: count, limit });
       setGigLimitModalOpen(true);
       return;
     }
-    console.log('Opening AddGig modal');
+    console.log("🚀 Opening Add Gig modal");
     setGigModalMode("add");
     setGigToEdit(null);
     setGigModalOpen(true);
