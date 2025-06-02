@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 "use client";
 import { MainNav } from "@/components/MainNav";
 import { Button } from "@/components/ui/button";
