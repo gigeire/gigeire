@@ -2,7 +2,6 @@
 
 export const dynamic = "force-dynamic";
 
-"use client";
 import { useGigs } from "@/context/GigsContext";
 import { useClients } from "@/context/ClientsContext";
 import { useParams, useRouter } from "next/navigation";
