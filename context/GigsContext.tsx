@@ -24,45 +24,61 @@ export function GigsProvider({ children }: { children: ReactNode }) {
 
   const checkGigLimit = async (): Promise<{ canAddGig: boolean; currentCount: number; limit: number }> => {
     if (!userId) {
-      return { canAddGig: false, currentCount: 0, limit: 0 }; // Should not happen if called correctly
+      console.log('[checkGigLimit] No userId available');
+      return { canAddGig: false, currentCount: 0, limit: 0 };
     }
     try {
-      console.log('[checkGigLimit] Using uid:', userId);
+      console.log('[checkGigLimit] Using userId:', userId);
       
       // Fetch subscription plan from our new API route
       const response = await fetch('/api/user/subscription');
       if (!response.ok) {
-        console.error('Failed to fetch subscription plan:', await response.text());
-        return { canAddGig: false, currentCount: 0, limit: 10 }; // Default to restrictive on error
+        console.error('[checkGigLimit] Failed to fetch subscription plan:', await response.text());
+        return { canAddGig: false, currentCount: 0, limit: 10 };
       }
       
       const { subscriptionPlan } = await response.json();
       console.log('[checkGigLimit] Subscription plan:', subscriptionPlan);
 
-      // Count gigs for this user (no deleted_at filter)
-      const { count, error: countError } = await supabase
+      // Count gigs for this user
+      const { data: gigs, error: countError } = await supabase
         .from('gigs')
-        .select('*', { count: 'exact', head: true })
+        .select('*')
         .eq('user_id', userId);
 
       if (countError) {
+        console.error('[checkGigLimit] Error fetching gigs:', countError);
         throw countError;
       }
 
-      const currentCount = count || 0;
+      console.log('[checkGigLimit] Supabase response:', {
+        userId,
+        gigsFound: gigs?.length || 0,
+        rawResponse: gigs
+      });
+
+      const currentCount = gigs?.length || 0;
       const plan = subscriptionPlan || 'free';
       let limit = 10; // Default for free tier
 
       if (plan === 'premium') {
         limit = Infinity; // Or a very high number
       }
-      // Add other plans here if necessary
       
-      return { canAddGig: currentCount < limit, currentCount, limit };
+      const canAddGig = currentCount < limit;
+      console.log('[checkGigLimit] Result:', {
+        currentCount,
+        limit,
+        canAddGig,
+        plan
+      });
+      
+      return { canAddGig, currentCount, limit };
 
     } catch (err) {
+      console.error('[checkGigLimit] Error:', err);
       setError(err instanceof Error ? err.message : "Could not verify gig limit.");
-      return { canAddGig: false, currentCount: 0, limit: 10 }; // Default to restrictive on error
+      return { canAddGig: false, currentCount: 0, limit: 10 };
     }
   };
 

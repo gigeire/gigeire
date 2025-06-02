@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@/utils/supabase/server";
+import { createServiceClient } from "@/utils/supabase/server";
 
 // Initialize Stripe with the secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -45,8 +45,8 @@ export async function POST(req: Request) {
         );
       }
 
-      // Update the user's plan in Supabase
-      const supabase = createClient({ auth: { persistSession: false } });
+      // Update the user's plan in Supabase using service role
+      const supabase = createServiceClient();
       const { error: updateError } = await supabase
         .from("users")
         .update({ subscription_plan: "premium" })
