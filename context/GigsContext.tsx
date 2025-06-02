@@ -29,6 +29,7 @@ export function GigsProvider({ children }: { children: ReactNode }) {
     }
     try {
       console.log('[checkGigLimit] Using userId:', userId);
+      console.log("[checkGigLimit] Current user ID:", userId);
       
       // Fetch subscription plan from our new API route
       const response = await fetch('/api/user/subscription');
@@ -41,23 +42,19 @@ export function GigsProvider({ children }: { children: ReactNode }) {
       console.log('[checkGigLimit] Subscription plan:', subscriptionPlan);
 
       // Count gigs for this user
-      const { data: gigs, error: countError } = await supabase
-        .from('gigs')
-        .select('*')
-        .eq('user_id', userId);
+      const { count, error } = await supabase
+        .from("gigs")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId);
 
-      if (countError) {
-        console.error('[checkGigLimit] Error fetching gigs:', countError);
-        throw countError;
+      console.log("[checkGigLimit] Gig count result:", { count, error });
+
+      if (error) {
+        console.error('[checkGigLimit] Error fetching gigs:', error);
+        throw error;
       }
 
-      console.log('[checkGigLimit] Supabase response:', {
-        userId,
-        gigsFound: gigs?.length || 0,
-        rawResponse: gigs
-      });
-
-      const currentCount = gigs?.length || 0;
+      const currentCount = count || 0;
       const plan = subscriptionPlan || 'free';
       let limit = 10; // Default for free tier
 
