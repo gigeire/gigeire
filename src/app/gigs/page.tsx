@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 "use client";
 
 import { useGigs } from "@/context/GigsContext";
@@ -14,6 +16,7 @@ import { formatDate } from "@/utils/date";
 import { statusColors } from "@/constants/ui";
 import { GigModal } from "@/components/GigModal";
 import { useToast } from "@/hooks/use-toast";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 type SortField = 'name' | 'client' | 'date' | 'amount' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -88,6 +91,7 @@ export default function GigsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const supabase = createClientComponentClient();
   
   const [isMobile, setIsMobile] = useState(false);
 
