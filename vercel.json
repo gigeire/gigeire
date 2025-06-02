@@ -1,0 +1,12 @@
+{
+  "routes": [
+    {
+      "src": "/api/webhooks/stripe",
+      "methods": ["POST"],
+      "headers": {
+        "x-vercel-protection-bypass": "true"
+      },
+      "dest": "/api/webhooks/stripe"
+    }
+  ]
+} 
