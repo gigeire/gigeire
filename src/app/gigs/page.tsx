@@ -1,16 +1,8 @@
-// Move "use client" to the very top
-// Move "use client" to the very top
-// Move "use client" to the very top
-"use client";
-
-import { Suspense } from "react";
-
 export const dynamic = "force-dynamic";
 
-import { useGigs } from "@/context/GigsContext";
-// (all your other imports)
+"use client";
 
-
+import { Suspense, useState, useMemo, useEffect } from 'react';
 import { useGigs } from "@/context/GigsContext";
 import { useClients } from "@/context/ClientsContext";
 import { Gig } from "@/types";
@@ -20,14 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useMemo, useEffect } from "react";
 import { formatDate } from "@/utils/date";
 import { statusColors } from "@/constants/ui";
 import { GigModal } from "@/components/GigModal";
 import { useToast } from "@/hooks/use-toast";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-// Remove dynamic import
 type SortField = 'name' | 'client' | 'date' | 'amount' | 'status';
 type SortDirection = 'asc' | 'desc';
 
@@ -95,7 +85,7 @@ function getStatusKey(gig: Gig): string {
   return gig.status;
 }
 
-function GigsPage() {
+function GigsPageContent() {
   const { gigs, updateGig } = useGigs();
   const { clients, refetch: refetchClients } = useClients();
   const searchParams = useSearchParams();
@@ -116,11 +106,9 @@ function GigsPage() {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  // Modal state
   const [gigModalOpen, setGigModalOpen] = useState(false);
   const [gigToEdit, setGigToEdit] = useState<Gig | null>(null);
 
-  // Modal handlers
   const handleGigModalOpenChange = (open: boolean) => {
     setGigModalOpen(open);
     if (!open) {
@@ -146,7 +134,6 @@ function GigsPage() {
     }
   };
 
-  // Filter gigs based on status
   const filteredGigs = useMemo(() => {
     let filtered = gigs;
     
@@ -172,7 +159,6 @@ function GigsPage() {
     return filtered;
   }, [gigs, statusFilter]);
 
-  // Sort gigs
   const sortedGigs = useMemo(() => {
     const sorted = [...filteredGigs].sort((a, b) => {
       let aValue: string | number | Date;
@@ -247,7 +233,6 @@ function GigsPage() {
       <MainNav />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header - Reordered and styled for mobile */}
         <div className="mb-8">
           <div className="flex flex-col items-start mb-4">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 text-left">
@@ -255,7 +240,6 @@ function GigsPage() {
             </h1>
           </div>
           
-          {/* Status Filter */}
           <div className="flex flex-wrap gap-2">
             {STATUS_OPTIONS.map((option) => (
               <Button
@@ -271,9 +255,7 @@ function GigsPage() {
           </div>
         </div>
 
-        {/* Table for Desktop, Cards for Mobile */}
         {isMobile ? (
-          // Mobile Card View
           <div className="space-y-4">
             {sortedGigs.length === 0 ? (
               (() => {
@@ -321,7 +303,6 @@ function GigsPage() {
             )}
           </div>
         ) : (
-          // Desktop Table View
           <div className="bg-white rounded-lg shadow">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -447,7 +428,6 @@ function GigsPage() {
         )}
       </div>
 
-      {/* Edit Gig Modal */}
       <GigModal
         open={gigModalOpen}
         onOpenChange={handleGigModalOpenChange}
@@ -457,17 +437,24 @@ function GigsPage() {
       />
     </div>
   );
+} 
+
+function GigsLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <MainNav />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col items-center justify-center" style={{minHeight: 'calc(100vh - 150px)'}} >
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700 mb-4"></div>
+        <p className="text-lg text-gray-600">Loading gigs...</p>
+      </div>
+    </div>
+  );
 }
 
-
-import dynamic from "next/dynamic";
-
-const GigsPageWithSuspense = dynamic(() => Promise.resolve(function GigsPageWithSuspenseWrapper() {
+export default function GigsPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <GigsPage />
+    <Suspense fallback={<GigsLoading />}>
+      <GigsPageContent />
     </Suspense>
   );
-}), { ssr: false });
-
-export default GigsPageWithSuspense;
+}
