@@ -38,12 +38,12 @@ export default function Dashboard() {
     const limitCheck = await checkGigLimit();
     console.log('[AddGig] checkGigLimit result:', limitCheck);
     if (!limitCheck.canAddGig) {
-      console.log('[AddGig] Blocking Add Gig modal: currentCount =', limitCheck.currentCount, 'limit =', limitCheck.limit);
+      console.log('Opening Upgrade modal');
       setGigLimitData({ currentCount: limitCheck.currentCount, limit: limitCheck.limit });
       setGigLimitModalOpen(true);
       return;
     }
-
+    console.log('Opening AddGig modal');
     setGigModalMode("add");
     setGigToEdit(null);
     setGigModalOpen(true);
@@ -102,6 +102,13 @@ export default function Dashboard() {
     }
   };
 
+  const handleGigLimitModalOpenChange = (open: boolean) => {
+    setGigLimitModalOpen(open);
+    if (!open) {
+      setGigLimitData({ currentCount: 0, limit: 10 });
+    }
+  };
+
   const groupedGigs = groupGigsByDateProximity(gigs);
   const hasUpcomingGigs = groupedGigs.length > 0;
   const hasAnyGigs = gigs.length > 0;
@@ -140,7 +147,7 @@ export default function Dashboard() {
         />
         <GigLimitModal
           open={gigLimitModalOpen}
-          onOpenChange={setGigLimitModalOpen}
+          onOpenChange={handleGigLimitModalOpenChange}
           limit={gigLimitData.limit}
         />
       </div>
@@ -216,7 +223,7 @@ export default function Dashboard() {
       />
       <GigLimitModal
         open={gigLimitModalOpen}
-        onOpenChange={setGigLimitModalOpen}
+        onOpenChange={handleGigLimitModalOpenChange}
         limit={gigLimitData.limit}
       />
     </div>
