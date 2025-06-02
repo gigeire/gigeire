@@ -1,6 +1,16 @@
-export const dynamic = "force-dynamic";
-
 "use client";
+
+import dynamic from "next/dynamic";
+import { useGigs } from "@/context/GigsContext";
+// (all your other imports)
+
+const GigsPage = () => {
+  // your full component code (as already written)
+};
+
+export default dynamic(() => Promise.resolve(GigsPage), {
+  ssr: false,
+});
 
 import { useGigs } from "@/context/GigsContext";
 import { useClients } from "@/context/ClientsContext";
