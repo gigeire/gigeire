@@ -1,6 +1,6 @@
+// Move "use client" to the very top
 "use client";
 
-import dynamic from "next/dynamic";
 import { useGigs } from "@/context/GigsContext";
 // (all your other imports)
 
@@ -21,6 +21,7 @@ import { GigModal } from "@/components/GigModal";
 import { useToast } from "@/hooks/use-toast";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
+// Remove dynamic import
 type SortField = 'name' | 'client' | 'date' | 'amount' | 'status';
 type SortDirection = 'asc' | 'desc';
 
@@ -452,6 +453,15 @@ function GigsPage() {
   );
 }
 
-export default dynamic(() => Promise.resolve(GigsPage), {
-  ssr: false,
-});
+
+import { Suspense } from "react";
+
+function GigsPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <GigsPage />
+    </Suspense>
+  );
+}
+
+export default GigsPageWrapper;
