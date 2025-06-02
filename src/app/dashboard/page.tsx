@@ -34,9 +34,11 @@ export default function Dashboard() {
   };
 
   const handleAddGigClick = async () => {
-    // Check gig limit before opening modal
+    // Always re-run checkGigLimit synchronously before opening modal
     const limitCheck = await checkGigLimit();
+    console.log('[AddGig] checkGigLimit result:', limitCheck);
     if (!limitCheck.canAddGig) {
+      console.log('[AddGig] Blocking Add Gig modal: currentCount =', limitCheck.currentCount, 'limit =', limitCheck.limit);
       setGigLimitData({ currentCount: limitCheck.currentCount, limit: limitCheck.limit });
       setGigLimitModalOpen(true);
       return;
