@@ -457,8 +457,14 @@ function GigsPage() {
 }
 
 
-import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
-export default dynamic(() => Promise.resolve(GigsPage), {
-  ssr: false,
-});
+function GigsPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <GigsPage />
+    </Suspense>
+  );
+}
+
+export default GigsPageWrapper;
