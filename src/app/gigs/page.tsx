@@ -1,5 +1,8 @@
 // Move "use client" to the very top
+// Move "use client" to the very top
 "use client";
+
+export const dynamic = "force-dynamic";
 
 import { useGigs } from "@/context/GigsContext";
 // (all your other imports)
@@ -454,12 +457,8 @@ function GigsPage() {
 }
 
 
-import { Suspense } from "react";
+import dynamic from "next/dynamic";
 
-export default function GigsPageSuspenseWrapper() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <GigsPage />
-    </Suspense>
-  );
-}
+export default dynamic(() => Promise.resolve(GigsPage), {
+  ssr: false,
+});
