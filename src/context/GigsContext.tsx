@@ -374,7 +374,7 @@ export function GigsProvider({ children }: { children: ReactNode }) {
     try {
       const { data: userDetails, error: userError } = await supabase
         .from('users')
-        .select('subscription_plan, gigs_count') // Make sure gigs_count is accurate
+        .select('subscription_plan')
         .eq('id', userId)
         .single();
 
@@ -382,7 +382,18 @@ export function GigsProvider({ children }: { children: ReactNode }) {
         throw userError;
       }
 
-      const currentCount = userDetails?.gigs_count || gigs.length; // Fallback to gigs.length, but gigs_count from DB is better
+      // Count only non-deleted gigs
+      const { count, error: countError } = await supabase
+        .from('gigs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .is('deleted_at', null);
+
+      if (countError) {
+        throw countError;
+      }
+
+      const currentCount = count || 0;
       const plan = userDetails?.subscription_plan || 'free';
       let limit = 10; // Default for free tier
 
@@ -395,7 +406,7 @@ export function GigsProvider({ children }: { children: ReactNode }) {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not verify gig limit.");
-      return { canAddGig: false, currentCount: gigs.length, limit: 10 }; // Default to restrictive on error
+      return { canAddGig: false, currentCount: 0, limit: 10 }; // Default to restrictive on error
     }
   };
 
