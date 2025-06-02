@@ -12,17 +12,17 @@ export async function POST(req: Request) {
     // Get Supabase session from cookies
     const supabase = createClient();
     const cookieStore = cookies();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-    const userId = session.user.id;
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user?.id) {
+        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      }
+    const userId = user.id;
 
     // Create Stripe Checkout session
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
-      mode: "payment",
+      mode: "subscription",
       line_items: [
         {
           price: process.env.STRIPE_PREMIUM_PRICE_ID!,
