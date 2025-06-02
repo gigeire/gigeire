@@ -4,13 +4,6 @@ import dynamic from "next/dynamic";
 import { useGigs } from "@/context/GigsContext";
 // (all your other imports)
 
-const GigsPage = () => {
-  // your full component code (as already written)
-};
-
-export default dynamic(() => Promise.resolve(GigsPage), {
-  ssr: false,
-});
 
 import { useGigs } from "@/context/GigsContext";
 import { useClients } from "@/context/ClientsContext";
@@ -95,7 +88,7 @@ function getStatusKey(gig: Gig): string {
   return gig.status;
 }
 
-export default function GigsPage() {
+function GigsPage() {
   const { gigs, updateGig } = useGigs();
   const { clients, refetch: refetchClients } = useClients();
   const searchParams = useSearchParams();
@@ -457,4 +450,8 @@ export default function GigsPage() {
       />
     </div>
   );
-} 
+}
+
+export default dynamic(() => Promise.resolve(GigsPage), {
+  ssr: false,
+});
