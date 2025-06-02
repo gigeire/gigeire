@@ -382,12 +382,11 @@ export function GigsProvider({ children }: { children: ReactNode }) {
         throw userError;
       }
 
-      // Count only non-deleted gigs
+      // Count gigs for this user (no deleted_at filter)
       const { count, error: countError } = await supabase
         .from('gigs')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .is('deleted_at', null);
+        .eq('user_id', userId);
 
       if (countError) {
         throw countError;
