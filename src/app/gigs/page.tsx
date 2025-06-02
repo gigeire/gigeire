@@ -1,6 +1,6 @@
-export const dynamic = "force-dynamic";
-
 "use client";
+
+export const dynamic = "force-dynamic";
 
 import { Suspense, useState, useMemo, useEffect } from 'react';
 import { useGigs } from "@/context/GigsContext";

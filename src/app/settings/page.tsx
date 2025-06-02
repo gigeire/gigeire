@@ -1,6 +1,7 @@
+"use client";
+
 export const dynamic = "force-dynamic";
 
-"use client";
 import { MainNav } from "@/components/MainNav";
 import { Button } from "@/components/ui/button";
 import { Mail, ExternalLink, LogOut, Crown, Shield, FileText, MessageCircle, Instagram, Gift } from "lucide-react";
