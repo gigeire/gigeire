@@ -790,7 +790,7 @@ export default function ClientDetailPage() {
           mode={gigToEdit ? 'edit' : (gigToClone ? 'clone' : 'add')}
           gigToEdit={gigToEdit}
           gigToClone={gigToClone}
-          onSubmit={handleGigSubmit}
+          onSubmit={handleGigSubmit as unknown as (gig: Omit<Gig, "id" | "user_id" | "created_at">) => void}
           clients={clients || []}
           selectedClientId={client?.id}
         />

@@ -68,7 +68,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-gray-500 mb-2 sm:mb-0">
                   Invite a freelancer. You both get 1 free month of Premium.
                 </p>
-              </div>
+                </div>
               <Button 
                 onClick={handleReferFriendClick}
                 className="bg-pink-500 hover:bg-pink-600 text-white sm:order-2"

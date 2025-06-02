@@ -614,7 +614,7 @@ export default function AnalyticsPage() {
                       <p className="text-sm text-gray-500 mt-1">How your gigs move through the pipeline</p>
                     </CardHeader>
                     <CardContent className="h-[350px]">
-                      <BookingFunnel data={calculatedData.bookingFunnel} />
+                        <BookingFunnel data={calculatedData.bookingFunnel} />
                     </CardContent>
                   </Card>
 
@@ -625,7 +625,7 @@ export default function AnalyticsPage() {
                       <p className="text-sm text-gray-500 mt-1">How long it takes to get paid</p>
                     </CardHeader>
                     <CardContent className="h-[350px]">
-                      <PaymentDelayChart data={calculatedData.paymentDelay.delayData} />
+                        <PaymentDelayChart data={calculatedData.paymentDelay.delayData} />
                     </CardContent>
                   </Card>
                 </div>
@@ -636,4 +636,4 @@ export default function AnalyticsPage() {
       </div>
     </div>
   );
-}
+} 
