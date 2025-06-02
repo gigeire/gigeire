@@ -268,7 +268,6 @@ export function StandardInvoiceModal({
         gig_id: gig.id,
         invoice_number: finalInvoiceNumberString,
         user_id: userId,
-        amount: gig.amount || 0,
         subtotal: subtotal,
         vat_rate: vatRateNum,
         include_vat: vatRateNum > 0,
@@ -277,6 +276,7 @@ export function StandardInvoiceModal({
         due_date: dueDate,
         invoice_sent_at: invoiceSentAt,
         status: 'sent' as const,
+        created_at: new Date().toISOString()
       };
 
       const { data: invoiceData, error: invoiceError } = await supabase

@@ -18,7 +18,11 @@ export function MainNav() {
       <div className="max-w-5xl mx-auto flex justify-center">
         <ul className="flex gap-2 md:gap-6 py-2 md:py-3">
           {navItems.map(({ name, href, icon: Icon }) => {
-            const isActive = pathname.startsWith(href);
+            let isActive = pathname.startsWith(href);
+            // Special case: highlight Dashboard tab on /gigs and its subpages
+            if (name === "Dashboard" && (pathname === "/gigs" || pathname.startsWith("/gigs/"))) {
+              isActive = true;
+            }
             return (
               <li key={name}>
                 <Link

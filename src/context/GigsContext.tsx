@@ -17,6 +17,12 @@ interface GigsContextType {
 
 const GigsContext = createContext<GigsContextType | undefined>(undefined);
 
+interface GigWithClient extends Omit<Gig, 'client'> {
+  clients: {
+    name: string;
+  };
+}
+
 export function GigsProvider({ children }: { children: ReactNode }) {
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,14 +77,29 @@ export function GigsProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error: fetchError } = await supabase
         .from("gigs")
-        .select("*, clients(name)")
+        .select(`
+          id,
+          user_id,
+          client_id,
+          title,
+          date,
+          location,
+          amount,
+          status,
+          notes,
+          created_at,
+          clients (
+            name
+          )
+        `)
         .eq("user_id", userId)
         .order("date", { ascending: true });
+
       if (fetchError) throw fetchError;
       
       const transformedGigs = data ? data.map(gig => ({
         ...gig,
-        client: gig.clients?.name || 'Unknown Client' 
+        client: (gig as unknown as GigWithClient).clients?.name || 'Unknown Client' 
       })) : [];
       setGigs(transformedGigs as Gig[] || []);
     } catch (err) {
@@ -114,7 +135,7 @@ export function GigsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const gigPayload: any = {
+      const gigPayload = {
         title: gig.title,
         date: gig.date,
         amount: gig.amount,
@@ -123,9 +144,11 @@ export function GigsProvider({ children }: { children: ReactNode }) {
         client_id: gig.client_id,
         user_id: userId,
         created_at: new Date().toISOString(),
+        notes: gig.notes || null
       };
-      if (gig.notes) gigPayload.notes = gig.notes;
+
       if (!gigPayload.client_id) throw new Error('Missing or invalid client_id for gig insert');
+      
       const { data: insertData, error: insertError } = await supabase
         .from("gigs")
         .insert([gigPayload])
@@ -141,8 +164,23 @@ export function GigsProvider({ children }: { children: ReactNode }) {
 
       const { data: insertedGig, error: fetchError } = await supabase
         .from("gigs")
-        .select("*, clients(name)")
+        .select(`
+          id,
+          user_id,
+          client_id,
+          title,
+          date,
+          location,
+          amount,
+          status,
+          notes,
+          created_at,
+          clients (
+            name
+          )
+        `)
         .eq("id", insertData[0].id)
+        .eq("user_id", userId)
         .single();
 
       if (fetchError) {
@@ -152,7 +190,7 @@ export function GigsProvider({ children }: { children: ReactNode }) {
       if (insertedGig) {
         const finalGig = {
           ...insertedGig,
-          client: insertedGig.clients?.name || 'Unknown Client'
+          client: (insertedGig as unknown as GigWithClient).clients?.name || 'Unknown Client'
         };
         setGigs(prev => [...prev, finalGig as Gig].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
         return finalGig as Gig;
@@ -211,19 +249,15 @@ export function GigsProvider({ children }: { children: ReactNode }) {
         setError(`Failed to update gig: ${updateError.message}`);
         throw updateError;
       }
-      
-      if (!updatedGigPrimaryFields || updatedGigPrimaryFields.length === 0) {
-        // This can be a normal case if .select() doesn't match, not necessarily an error to log to console
-      }
 
       if (statusBeingSetToPaid) {
         const existingGig = gigs.find(g => g.id === id) || updatedGigPrimaryFields?.[0];
-
         if (existingGig && existingGig.id) {
           const { data: existingInvoice, error: fetchInvoiceError } = await supabase
             .from('invoices')
             .select('id, invoice_paid_at, status')
             .eq('gig_id', existingGig.id)
+            .eq('user_id', userId)
             .maybeSingle();
 
           if (fetchInvoiceError) {
@@ -237,7 +271,8 @@ export function GigsProvider({ children }: { children: ReactNode }) {
                   status: 'paid', 
                   invoice_paid_at: existingInvoice.invoice_paid_at || new Date().toISOString() 
                 })
-                .eq('id', existingInvoice.id);
+                .eq('id', existingInvoice.id)
+                .eq('user_id', userId);
 
               if (updateInvoiceError) {
                 setError(updateInvoiceError.message || "Failed to update linked invoice payment status.");
@@ -245,25 +280,19 @@ export function GigsProvider({ children }: { children: ReactNode }) {
               } else {
                 await refetchInvoices();
               }
-            } else {
-              // Existing invoice (ID: existingInvoice.id) is already marked 'paid' with payment date. No update needed.
             }
-          } else {
-            // No existing invoice found for gig ID: existingGig.id. Gig will be marked 'paid' without an invoice update.
           }
-        } else {
-          // Could not find existing gig data to check for an invoice when marking as paid. Gig ID: id
         }
       }
 
       if (statusBeingSetToInvoiceSent) {
-        // Placeholder invoice logic
         const existingGig = gigs.find(g => g.id === id) || updatedGigPrimaryFields?.[0];
         if (existingGig && existingGig.id) {
           const { data: existingInvoice, error: fetchInvoiceError } = await supabase
             .from('invoices')
             .select('id')
             .eq('gig_id', existingGig.id)
+            .eq('user_id', userId)
             .maybeSingle();
           if (!existingInvoice && !fetchInvoiceError) {
             // Create minimal placeholder invoice
@@ -283,7 +312,7 @@ export function GigsProvider({ children }: { children: ReactNode }) {
               vat_amount: 0,
               total: existingGig.amount || 0,
               include_vat: false,
-              vat_rate: 0,
+              vat_rate: 0
             };
             const { error: insertError } = await supabase
               .from('invoices')
@@ -299,7 +328,21 @@ export function GigsProvider({ children }: { children: ReactNode }) {
 
       const { data: fullyUpdatedGig, error: fetchError } = await supabase
         .from("gigs")
-        .select("*, clients(name)")
+        .select(`
+          id,
+          user_id,
+          client_id,
+          title,
+          date,
+          location,
+          amount,
+          status,
+          notes,
+          created_at,
+          clients (
+            name
+          )
+        `)
         .eq("id", id)
         .eq("user_id", userId)
         .single();
@@ -321,7 +364,7 @@ export function GigsProvider({ children }: { children: ReactNode }) {
       if (fullyUpdatedGig) {
         const finalUpdatedGig = {
           ...fullyUpdatedGig,
-          client: fullyUpdatedGig.clients?.name || 'Unknown Client'
+          client: (fullyUpdatedGig as unknown as GigWithClient).clients?.name || 'Unknown Client'
         };
         setGigs(prev => 
           prev.map(g => g.id === id ? (finalUpdatedGig as Gig) : g)
@@ -368,32 +411,45 @@ export function GigsProvider({ children }: { children: ReactNode }) {
   const refetch = fetchGigs;
 
   const checkGigLimit = async (): Promise<{ canAddGig: boolean; currentCount: number; limit: number }> => {
-    if (!userId) {
-      return { canAddGig: false, currentCount: 0, limit: 0 }; // Should not happen if called correctly
-    }
     try {
+      // Get session instead of user directly
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Gig limit check: Error fetching session:", sessionError);
+        throw sessionError;
+      }
+
+      const user = session?.user;
+      if (!user?.id) {
+        console.log("Gig limit check: No authenticated user found in session");
+        return { canAddGig: false, currentCount: 0, limit: 0 };
+      }
+
       const { data: userDetails, error: userError } = await supabase
         .from('users')
-        .select('subscription_plan')
-        .eq('id', userId)
+        .select('id, plan')
+        .eq('id', user.id)
         .single();
 
       if (userError) {
+        console.error("Gig limit check: Error fetching user details:", userError);
         throw userError;
       }
 
-      // Count gigs for this user (no deleted_at filter)
+      // Count gigs for this user - Note: No soft delete filtering as deleted_at column does not exist
       const { count, error: countError } = await supabase
         .from('gigs')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
+        .eq('user_id', user.id);
 
       if (countError) {
+        console.error("Gig limit check: Error counting gigs:", countError);
         throw countError;
       }
 
       const currentCount = count || 0;
-      const plan = userDetails?.subscription_plan || 'free';
+      const plan = userDetails?.plan || 'free';
       let limit = 10; // Default for free tier
 
       if (plan === 'premium') {
@@ -401,9 +457,18 @@ export function GigsProvider({ children }: { children: ReactNode }) {
       }
       // Add other plans here if necessary
       
+      console.log("Gig limit check:", { 
+        userId: user.id, 
+        currentCount, 
+        limit, 
+        plan,
+        canAddGig: currentCount < limit 
+      });
+      
       return { canAddGig: currentCount < limit, currentCount, limit };
 
     } catch (err) {
+      console.error("Gig limit check: Error in checkGigLimit:", err);
       setError(err instanceof Error ? err.message : "Could not verify gig limit.");
       return { canAddGig: false, currentCount: 0, limit: 10 }; // Default to restrictive on error
     }

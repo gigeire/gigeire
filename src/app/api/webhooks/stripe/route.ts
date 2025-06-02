@@ -46,10 +46,10 @@ export async function POST(req: Request) {
       }
 
       // Update the user's plan in Supabase
-      const supabase = createClient({ auth: { persistSession: false } });
+      const supabase = createClient();
       const { error: updateError } = await supabase
         .from("users")
-        .update({ subscription_plan: "premium" })
+        .update({ plan: "premium" })
         .eq("id", supabaseUserId);
 
       if (updateError) {

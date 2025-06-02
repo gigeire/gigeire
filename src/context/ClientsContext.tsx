@@ -68,7 +68,11 @@ export function ClientsProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error: fetchError } = await supabase
         .from("clients")
-        .select("*")
+        .select(`
+          id,
+          user_id,
+          name
+        `)
         .eq("user_id", userId)
         .order("name", { ascending: true });
       if (fetchError) throw fetchError;
