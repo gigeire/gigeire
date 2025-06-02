@@ -2,6 +2,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
+import { useState } from "react";
 
 interface GigLimitModalProps {
   open: boolean;
@@ -10,12 +11,27 @@ interface GigLimitModalProps {
 }
 
 export function GigLimitModal({ open, onOpenChange, limit }: GigLimitModalProps) {
-  const handleUpgradeClick = () => {
-    onOpenChange(false);
-    // Open Stripe checkout in new tab with success URL redirect to thank-you page
-    const baseUrl = window.location.origin;
-    const successUrl = encodeURIComponent(`${baseUrl}/thank-you`);
-    window.open(`https://buy.stripe.com/00w5kCfzc4SA9okbSg3gk01?success_url=${successUrl}`, "_blank");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUpgradeClick = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.error || "Failed to start checkout session");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -36,9 +52,11 @@ export function GigLimitModal({ open, onOpenChange, limit }: GigLimitModalProps)
           <Button 
             onClick={handleUpgradeClick}
             className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold"
+            disabled={loading}
           >
-            Upgrade to Premium
+            {loading ? "Redirecting..." : "Upgrade to Premium"}
           </Button>
+          {error && <div className="text-red-600 text-sm text-center mt-1">{error}</div>}
           
           <Button 
             onClick={handleCancel}

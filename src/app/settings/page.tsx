@@ -8,10 +8,13 @@ import { Mail, ExternalLink, LogOut, Crown, Shield, FileText, MessageCircle, Ins
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function SettingsPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogout = async () => {
     if (confirm("Are you sure you want to logout?")) {
@@ -20,9 +23,24 @@ export default function SettingsPage() {
     }
   };
 
-  const handleUpgradeClick = () => {
-    // Open Stripe checkout in new tab
-    window.open("https://buy.stripe.com/00w5kCfzc4SA9okbSg3gk01", "_blank");
+  const handleUpgradeClick = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.error || "Failed to start checkout session");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReferFriendClick = () => {
@@ -54,9 +72,11 @@ export default function SettingsPage() {
               <Button 
                 onClick={handleUpgradeClick}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white sm:order-2"
+                disabled={loading}
               >
-                Upgrade to Premium
+                {loading ? "Redirecting..." : "Upgrade to Premium"}
               </Button>
+              {error && <div className="text-red-600 text-sm text-center mt-2 w-full">{error}</div>}
             </div>
           </section>
 
