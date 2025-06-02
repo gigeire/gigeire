@@ -460,10 +460,14 @@ function GigsPage() {
 }
 
 
-export default function GigsPageWithSuspense() {
+import dynamic from "next/dynamic";
+
+const GigsPageWithSuspense = dynamic(() => Promise.resolve(function GigsPageWithSuspenseWrapper() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <GigsPage />
     </Suspense>
   );
-}
+}), { ssr: false });
+
+export default GigsPageWithSuspense;
