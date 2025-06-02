@@ -456,12 +456,10 @@ function GigsPage() {
 
 import { Suspense } from "react";
 
-function GigsPageWrapper() {
+export default function GigsPageSuspenseWrapper() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <GigsPage />
     </Suspense>
   );
 }
-
-export default GigsPageWrapper;
