@@ -1,6 +1,9 @@
 // Move "use client" to the very top
 // Move "use client" to the very top
+// Move "use client" to the very top
 "use client";
+
+import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -457,14 +460,10 @@ function GigsPage() {
 }
 
 
-import { Suspense } from "react";
-
-function GigsPageWrapper() {
+export default function GigsPageWithSuspense() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <GigsPage />
     </Suspense>
   );
 }
-
-export default GigsPageWrapper;
