@@ -14,6 +14,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 async function updateUserPlan(supabaseUserId: string, plan: string, maxRetries = 3) {
+  console.log(`[updateUserPlan] Called with supabaseUserId=${supabaseUserId}, plan=${plan}`);
   const supabase = createClient();
   let attempt = 0;
   let lastError = null;
@@ -22,12 +23,16 @@ async function updateUserPlan(supabaseUserId: string, plan: string, maxRetries =
       .from("users")
       .update({ plan })
       .eq("id", supabaseUserId);
-    if (!error) return true;
+    if (!error) {
+      console.log(`[updateUserPlan] Success: Updated user ${supabaseUserId} to plan '${plan}' on attempt ${attempt + 1}`);
+      return true;
+    }
     lastError = error;
     attempt++;
-    console.error(`Attempt ${attempt} failed to update user plan:`, error);
+    console.error(`[updateUserPlan] Attempt ${attempt} failed to update user ${supabaseUserId} to plan '${plan}':`, error);
     await new Promise((res) => setTimeout(res, 500 * attempt)); // Exponential backoff
   }
+  console.error(`[updateUserPlan] Failed to update user ${supabaseUserId} to plan '${plan}' after ${maxRetries} attempts. Last error:`, lastError);
   return lastError;
 }
 
