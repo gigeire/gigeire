@@ -3,19 +3,25 @@ export const dynamic = "force-dynamic";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@/utils/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 // Initialize Stripe with the secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-05-28.basil",
 });
 
+// Create Supabase client with service role key for admin access
+const supabaseAdmin = createSupabaseClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 // This is your Stripe webhook secret for testing your endpoint locally.
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 async function updateUserPlan(supabaseUserId: string, plan: string, maxRetries = 3) {
   console.log(`[updateUserPlan] Called with supabaseUserId=${supabaseUserId}, plan=${plan}`);
-  const supabase = createClient();
+  const supabase = supabaseAdmin;
   let attempt = 0;
   let lastError = null;
   while (attempt < maxRetries) {
@@ -58,7 +64,7 @@ export async function POST(req: Request) {
       event = stripe.webhooks.constructEvent(
         body,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET!
+        webhookSecret
       );
     } catch (err) {
       console.error("Stripe webhook signature verification failed:", err);
@@ -138,4 +144,4 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-} 
+}
