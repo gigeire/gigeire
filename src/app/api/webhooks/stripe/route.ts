@@ -76,33 +76,58 @@ export async function POST(req: Request) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const supabaseUserId = session.client_reference_id;
+
+        console.log(`[Webhook] checkout.session.completed: Received for client_reference_id: ${supabaseUserId}`);
+
         if (!supabaseUserId) {
+          console.error("[Webhook] checkout.session.completed: No client_reference_id found in session.");
           return NextResponse.json(
             { error: "No client_reference_id found in session" },
             { status: 400 }
           );
         }
 
+        // If there's no subscription ID, it might be a one-time payment or other session type.
+        // In this case, we can't update subscription metadata. Log and proceed if appropriate,
+        // or return if subscription is mandatory for this event.
         if (!session.subscription) {
-          console.warn("No subscription ID on session");
-          return NextResponse.json({ success: true });
+          console.warn("[Webhook] checkout.session.completed: No subscription ID (session.subscription) found on the session object. This might be a one-time payment or a different setup. Skipping subscription metadata update. Session ID:", session.id);
+          // Depending on business logic, you might still want to update the user plan or perform other actions.
+          // For now, if it was intended to be a subscription, this is an issue. If one-time, this is fine.
+          // We will proceed to update the user plan to premium, assuming the checkout was for that.
+          // If this path should not update the plan, add specific logic here.
+        } else {
+          // There is a subscription ID, so update its metadata
+          console.log(`[Webhook] checkout.session.completed: Subscription ID found: ${session.subscription}. Attempting to update metadata.`);
+          try {
+            await stripe.subscriptions.update(session.subscription.toString(), {
+              metadata: {
+                user_id: supabaseUserId, // Ensure this key matches what other webhooks expect
+              },
+            });
+            console.log(`[Webhook] checkout.session.completed: Successfully updated metadata for subscription ${session.subscription} with user_id: ${supabaseUserId}`);
+          } catch (metadataError: any) {
+            console.error(`[Webhook] checkout.session.completed: Failed to update metadata for subscription ${session.subscription}:`, metadataError);
+            return NextResponse.json(
+              { error: "Failed to update subscription metadata.", details: metadataError.message },
+              { status: 500 }
+            );
+          }
         }
 
-        // Update subscription metadata to include user_id
-        await stripe.subscriptions.update(session.subscription.toString(), {
-          metadata: {
-            user_id: supabaseUserId,
-          },
-        });
-
+        // Proceed to update the user's plan in Supabase
+        console.log(`[Webhook] checkout.session.completed: Attempting to update user plan in Supabase for user_id: ${supabaseUserId} to premium.`);
         const updateResult = await updateUserPlan(supabaseUserId, "premium");
         if (updateResult !== true) {
-          console.error("Error updating user plan after checkout:", updateResult);
+          console.error("[Webhook] checkout.session.completed: Error updating user plan in Supabase after checkout:", updateResult);
+          // updateResult might be an error object if updateUserPlan returns it
+          const errorMessage = (updateResult instanceof Error) ? updateResult.message : "Failed to update user plan in Supabase.";
           return NextResponse.json(
-            { error: "Failed to update user plan" },
+            { error: "Failed to update user plan in Supabase.", details: errorMessage },
             { status: 500 }
           );
         }
+        console.log(`[Webhook] checkout.session.completed: Successfully processed for user_id: ${supabaseUserId}. User plan updated.`);
         return NextResponse.json({ success: true });
       }
       case "customer.subscription.updated": {
