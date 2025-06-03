@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useSenderInfo, SenderInfo } from "@/context/SenderInfoContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface SenderInfoModalProps {
   open: boolean;
@@ -14,6 +15,7 @@ export function SenderInfoModal({ open, onOpenChange }: SenderInfoModalProps) {
   const { senderInfo, updateSenderInfo } = useSenderInfo();
   const [form, setForm] = useState<SenderInfo>(senderInfo);
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+  const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
@@ -22,14 +24,14 @@ export function SenderInfoModal({ open, onOpenChange }: SenderInfoModalProps) {
     }
   }, [senderInfo, open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { name?: string; email?: string } = {};
 
-    if (!form.name.trim()) {
+    if (!form.name || !form.name.trim()) {
       newErrors.name = "Name is required";
     }
-    if (!form.email.trim()) {
+    if (!form.email || !form.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       newErrors.email = "Invalid email format";
@@ -40,13 +42,18 @@ export function SenderInfoModal({ open, onOpenChange }: SenderInfoModalProps) {
       return;
     }
 
-    updateSenderInfo(form);
-    onOpenChange(false);
+    const success = await updateSenderInfo(form);
+    if (success) {
+      toast({ title: "Success", description: "Sender information saved." });
+      onOpenChange(false);
+    } else {
+      toast({ title: "Error", description: "Failed to save sender information to the database. Please try again.", variant: "destructive" });
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value || '' }));
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }

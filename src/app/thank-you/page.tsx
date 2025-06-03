@@ -20,12 +20,14 @@ export default function ThankYouPage() {
             You&apos;ll be upgraded shortly — we&apos;ve received your payment and are on it!
           </p>
           
-          <Link href="/dashboard">
-            <Button className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white">
-              <Home className="w-4 h-4" />
-              Return to Dashboard
-            </Button>
-          </Link>
+          <div className="flex justify-center">
+            <Link href="/dashboard">
+              <Button className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white">
+                <Home className="w-4 h-4" />
+                Return to Dashboard
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

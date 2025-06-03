@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -58,11 +58,24 @@ export function GigCard({ gig, onEdit, onClone, onDelete, onStatusChange }: GigC
   const { updateGig } = useGigs();
   const isInvoiceOverdue = isOverdue(gig);
   const dueDateText = getDueDateText(gig);
-  const { senderInfo } = useSenderInfo();
+  const { senderInfo, loading: senderInfoLoading } = useSenderInfo();
   const [showSenderInfoModal, setShowSenderInfoModal] = useState(false);
   const [showStandardInvoiceModal, setShowStandardInvoiceModal] = useState(false);
   const supabase = createClientComponentClient();
   const { toast } = useToast();
+
+  // Validate sender info before showing invoice modal
+  const validateSenderInfo = useCallback(() => {
+    if (senderInfoLoading) {
+      console.debug("[GigCard] Sender info is still loading");
+      return false;
+    }
+    if (!senderInfo?.name?.trim() || !senderInfo?.email?.trim()) {
+      console.debug("[GigCard] Missing required sender info:", { name: senderInfo?.name, email: senderInfo?.email });
+      return false;
+    }
+    return true;
+  }, [senderInfo, senderInfoLoading]);
 
   const getDisplayStatus = (status: GigStatus): string => {
     if (isInvoiceOverdue) return "Overdue";
@@ -116,11 +129,16 @@ export function GigCard({ gig, onEdit, onClone, onDelete, onStatusChange }: GigC
   const handleGenerateInvoiceClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!senderInfo?.name || !senderInfo?.email) {
+    console.debug("[GigCard] Generate invoice clicked, validating sender info");
+    
+    if (!validateSenderInfo()) {
+      console.debug("[GigCard] Invalid sender info, showing sender info modal");
       setShowSenderInfoModal(true);
-    } else {
-      setShowStandardInvoiceModal(true);
+      return;
     }
+    
+    console.debug("[GigCard] Sender info valid, showing invoice modal");
+    setShowStandardInvoiceModal(true);
   };
 
   const formatEuro = (value: number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
@@ -185,6 +203,18 @@ export function GigCard({ gig, onEdit, onClone, onDelete, onStatusChange }: GigC
     }
     handleEdit();
   };
+
+  // Automatically show SenderInfoModal if sender info is invalid when attempting to generate invoice
+  useEffect(() => {
+    if (showStandardInvoiceModal && !validateSenderInfo()) {
+      console.debug("[GigCard] Sender info became invalid, switching to sender info modal");
+      setShowStandardInvoiceModal(false);
+      setShowSenderInfoModal(true);
+    }
+  }, [showStandardInvoiceModal, validateSenderInfo]);
+
+  // Optionally, clear sender info from localStorage on logout (if logout logic is here)
+  // If not, this should be handled in the auth/logout logic or SenderInfoContext
 
   return (
     <>

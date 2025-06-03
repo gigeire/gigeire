@@ -46,10 +46,9 @@ export function StandardInvoiceModal({
   const supabase = createClientComponentClient();
   const { toast } = useToast();
 
-  const [dueDate, setDueDate] = useState("");
-  const [vatRate, setVatRate] = useState("23"); 
-  const [invoiceNumberDisplay, setInvoiceNumberDisplay] = useState("");
-  const [rawInvoiceNumber, setRawInvoiceNumber] = useState(() => Date.now());
+  const [dueDate, setDueDate] = useState<Date>(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+  const [vatRate, setVatRate] = useState("23");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false); // For preview button loading state
   const [errors, setErrors] = useState<FormErrors>({});
@@ -62,8 +61,7 @@ export function StandardInvoiceModal({
       const currentYear = now.getFullYear();
       const timestampSuffix = String(Date.now()).slice(-5);
       const newRawInvoiceNumber = Date.now();
-      setRawInvoiceNumber(newRawInvoiceNumber);
-      setInvoiceNumberDisplay(`INV-${currentYear}-${timestampSuffix}`);
+      setInvoiceNumber(`INV-${currentYear}-${timestampSuffix}`);
       
       const d = new Date();
       if (gig?.date) {
@@ -73,7 +71,7 @@ export function StandardInvoiceModal({
       } else {
         d.setDate(d.getDate() + 7); // Default due date 7 days from now if no gig date
       }
-      setDueDate(d.toISOString().split('T')[0]);
+      setDueDate(d);
       setVatRate("23"); // Default VAT rate
       setErrors({});
       setHasAttemptedSubmit(false);
@@ -128,7 +126,7 @@ export function StandardInvoiceModal({
     const vatRateNum = parseFloat(vatRate) || 0;
     const vatAmount = Math.round(subtotal * (vatRateNum / 100) * 100) / 100;
     const total = subtotal + vatAmount;
-    const finalInvoiceNumberString = invoiceNumberDisplay;
+    const finalInvoiceNumberString = invoiceNumber;
 
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageWidth = 210;
@@ -166,7 +164,7 @@ export function StandardInvoiceModal({
     yPos = Math.max(senderY, metaY) + 10;
 
     doc.setFontSize(8).setFont("helvetica", "normal").setTextColor(120);
-    doc.text("BILLED TO", margin, yPos); yPos += 4;
+    doc.text("BILLED TO", margin, yPos); yPos += 8;
     doc.setFontSize(12).setFont("helvetica", "bold").setTextColor(30);
     doc.text(gig.client || "N/A", margin, yPos); yPos += 6;
     doc.setFontSize(10).setFont("helvetica", "normal");
@@ -214,50 +212,67 @@ export function StandardInvoiceModal({
     setIsPreviewing(false);
   };
 
+  const validateInvoiceData = useCallback(() => {
+    if (!gig) {
+      console.error("[StandardInvoiceModal] No gig data provided");
+      return false;
+    }
+    if (!senderInfo?.name?.trim() || !senderInfo?.email?.trim()) {
+      console.error("[StandardInvoiceModal] Missing required sender info:", { name: senderInfo?.name, email: senderInfo?.email });
+      return false;
+    }
+    if (!invoiceNumber.trim()) {
+      console.error("[StandardInvoiceModal] Missing invoice number");
+      return false;
+    }
+    return true;
+  }, [gig, senderInfo, invoiceNumber]);
+
   const handleGenerateAndSendInvoice = async () => {
-    setHasAttemptedSubmit(true);
-    const formErrors = validateForm();
-    setErrors(formErrors);
-    
-    if (Object.keys(formErrors).length > 0) {
-      toast({ title: "Validation Error", description: "Please fix the errors below before generating invoice.", variant: "destructive" });
-      return;
-    }
-    
-    if (!gig || !senderInfo?.name) {
-      toast({ title: "Error", description: "Missing gig data or sender information.", variant: "destructive" });
-      return;
-    }
-    if (!gig.client_id) {
-      toast({ title: "Error", description: "Client ID is missing for this gig.", variant: "destructive" });
-      console.error("Missing client_id in gig:", gig);
-      return;
-    }
-    if (!gig.user_id) {
-      toast({ title: "Error", description: "User ID is missing for this gig.", variant: "destructive" });
-      console.error("Missing user_id in gig:", gig);
+    console.debug("[StandardInvoiceModal] Starting invoice generation");
+    if (!validateInvoiceData()) {
+      toast({
+        title: "Error",
+        description: "Missing required information. Please check sender details and invoice number.",
+        variant: "destructive"
+      });
       return;
     }
 
     setIsProcessing(true);
-    const doc = generatePdfDocument();
-    if (!doc) {
-      setIsProcessing(false);
-      return;
-    }
-
-    const subtotal = gig.amount || 0;
-    const vatRateNum = parseFloat(vatRate) || 0;
-    const vatAmount = Math.round(subtotal * (vatRateNum / 100) * 100) / 100;
-    const total = subtotal + vatAmount;
-    const finalInvoiceNumberString = invoiceNumberDisplay;
-
-    const pdfBlob = doc.output('blob');
-    const storedFileName = `invoice_${gig.user_id}_${gig.client_id}_${rawInvoiceNumber}_${Date.now()}.pdf`;
-    const userFriendlyFileName = `Invoice - ${gig.title || 'Untitled Gig'} (${finalInvoiceNumberString}).pdf`;
-    const filePath = `${gig.user_id}/${gig.client_id}/${storedFileName}`;
-
     try {
+      if (!gig || !senderInfo?.name) {
+        toast({ title: "Error", description: "Missing gig data or sender information.", variant: "destructive" });
+        return;
+      }
+      if (!gig.client_id) {
+        toast({ title: "Error", description: "Client ID is missing for this gig.", variant: "destructive" });
+        console.error("Missing client_id in gig:", gig);
+        return;
+      }
+      if (!gig.user_id) {
+        toast({ title: "Error", description: "User ID is missing for this gig.", variant: "destructive" });
+        console.error("Missing user_id in gig:", gig);
+        return;
+      }
+
+      const doc = generatePdfDocument();
+      if (!doc) {
+        setIsProcessing(false);
+        return;
+      }
+
+      const subtotal = gig.amount || 0;
+      const vatRateNum = parseFloat(vatRate) || 0;
+      const vatAmount = Math.round(subtotal * (vatRateNum / 100) * 100) / 100;
+      const total = subtotal + vatAmount;
+      const finalInvoiceNumberString = invoiceNumber;
+
+      const pdfBlob = doc.output('blob');
+      const storedFileName = `invoice_${gig.user_id}_${gig.client_id}_${Date.now()}_${Date.now()}.pdf`;
+      const userFriendlyFileName = `Invoice - ${gig.title || 'Untitled Gig'} (${finalInvoiceNumberString}).pdf`;
+      const filePath = `${gig.user_id}/${gig.client_id}/${storedFileName}`;
+
       // === BEGIN: Upsert into invoices table ===
       const invoiceSentAt = new Date().toISOString();
       const currentSenderInfo = senderInfo;
@@ -268,15 +283,15 @@ export function StandardInvoiceModal({
         gig_id: gig.id,
         invoice_number: finalInvoiceNumberString,
         user_id: userId,
-        amount: gig.amount || 0,
         subtotal: subtotal,
         vat_rate: vatRateNum,
         include_vat: vatRateNum > 0,
         vat_amount: vatAmount,
         total: total,
-        due_date: dueDate,
+        due_date: dueDate.toISOString().split('T')[0],
         invoice_sent_at: invoiceSentAt,
         status: 'sent' as const,
+        created_at: new Date().toISOString()
       };
 
       const { data: invoiceData, error: invoiceError } = await supabase
@@ -317,9 +332,9 @@ export function StandardInvoiceModal({
 
       // Update gig with invoice details and potentially invoice_sent_at
       const updatedInvoiceData: any = {
-        invoiceNumber: rawInvoiceNumber,
+        invoiceNumber: Date.now(),
         number: finalInvoiceNumberString,
-        dueDate,
+        dueDate: dueDate.toISOString().split('T')[0],
         vatIncluded: !!vatRateNum,
         subtotal,
         vatAmount,
@@ -358,10 +373,10 @@ export function StandardInvoiceModal({
       
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Invoice error:", JSON.stringify(error, null, 2));
+      console.error("[StandardInvoiceModal] Invoice generation failed:", error);
       toast({
-        title: "Error", 
-        description: `Invoice failed: ${error.message}`,
+        title: "Error",
+        description: `Invoice generation failed: ${error.message}`,
         variant: "destructive"
       });
     } finally {
@@ -416,7 +431,7 @@ export function StandardInvoiceModal({
             <Input 
               id="invoiceNumberModal" 
               type="text" 
-              value={invoiceNumberDisplay} 
+              value={invoiceNumber} 
               readOnly 
               disabled 
               className="w-full bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 cursor-not-allowed px-4 py-2.5" 
@@ -428,8 +443,8 @@ export function StandardInvoiceModal({
             <Input
               id="dueDateModal"
               type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
+              value={dueDate.toISOString().split('T')[0]}
+              onChange={(e) => setDueDate(new Date(e.target.value))}
               disabled={isProcessing || isPreviewing}
               className={`w-full px-4 py-2.5 ${errors.dueDate ? "border-red-500" : ""}`}
             />

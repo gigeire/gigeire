@@ -228,14 +228,15 @@ function GigsPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <MainNav />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+      <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 text-center">All Gigs</h1>
+        <MainNav />
+        
+        <div className="mt-8 mb-8">
           <div className="flex flex-col items-start mb-4">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 text-left">
+            <h2 className="text-xl font-semibold text-gray-900 text-left">
               {currentStatusLabel} ({sortedGigs.length})
-            </h1>
+            </h2>
           </div>
           
           <div className="flex flex-wrap gap-2">
@@ -304,10 +305,10 @@ function GigsPageContent() {
           <div className="bg-white rounded-lg shadow">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-100 border-b-2 border-gray-200">
                   <tr>
-                    <th 
-                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-6 py-3 text-center align-middle text-xs font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('name')}
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -315,8 +316,8 @@ function GigsPageContent() {
                         {getSortIcon('name')}
                       </div>
                     </th>
-                    <th 
-                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-6 py-3 text-center align-middle text-xs font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('client')}
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -324,8 +325,8 @@ function GigsPageContent() {
                         {getSortIcon('client')}
                       </div>
                     </th>
-                    <th 
-                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-6 py-3 text-center align-middle text-xs font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('date')}
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -333,8 +334,8 @@ function GigsPageContent() {
                         {getSortIcon('date')}
                       </div>
                     </th>
-                    <th 
-                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-6 py-3 text-center align-middle text-xs font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('amount')}
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -342,8 +343,8 @@ function GigsPageContent() {
                         {getSortIcon('amount')}
                       </div>
                     </th>
-                    <th 
-                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-6 py-3 text-center align-middle text-xs font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('status')}
                     >
                       <div className="flex items-center justify-center gap-2">

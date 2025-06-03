@@ -74,7 +74,23 @@ export function InvoicesProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error: fetchError } = await supabase
         .from("invoices")
-        .select("*")
+        .select(`
+          id,
+          user_id,
+          gig_id,
+          invoice_number,
+          due_date,
+          include_vat,
+          vat_rate,
+          status,
+          created_at,
+          invoice_paid_at,
+          client_id,
+          invoice_sent_at,
+          subtotal,
+          vat_amount,
+          total
+        `)
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
       if (fetchError) throw fetchError;
