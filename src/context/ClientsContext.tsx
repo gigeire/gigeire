@@ -61,8 +61,12 @@ export function ClientsProvider({ children }: { children: ReactNode }) {
   // useCallback for fetchClients
   const fetchClients = useCallback(async () => {
     if (!userId) {
+      console.debug("[ClientsContext] fetchClients called without userId. Skipping fetch.");
+      setClients([]); // Ensure clients are cleared if no user
+      setLoading(false);
       return;
     }
+    console.debug("[ClientsContext] fetchClients called for userId:", userId);
     setLoading(true);
     setError(null);
     try {
@@ -71,17 +75,27 @@ export function ClientsProvider({ children }: { children: ReactNode }) {
         .select(`
           id,
           user_id,
-          name
+          name,
+          email, 
+          phone
         `)
         .eq("user_id", userId)
         .order("name", { ascending: true });
-      if (fetchError) throw fetchError;
+
+      if (fetchError) {
+        console.error("[ClientsContext] Error fetching clients:", fetchError);
+        throw fetchError;
+      }
+      
+      console.debug("[ClientsContext] Clients fetched successfully:", data);
       setClients(data as Client[] || []);
     } catch (err) {
+      console.error("[ClientsContext] Exception in fetchClients:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch clients");
-      setClients([]);
+      setClients([]); // Clear clients on error
     } finally {
       setLoading(false);
+      console.debug("[ClientsContext] fetchClients finished. Loading set to false.");
     }
   }, [supabase, userId]); // Depends on supabase and userId state
 
@@ -118,21 +132,95 @@ export function ClientsProvider({ children }: { children: ReactNode }) {
 
   // Update a client
   const updateClient = async (id: string, update: Partial<Client>) => {
-    if (!userId) return;
+    if (!userId) {
+      console.warn("[ClientsContext] updateClient called without userId. Aborting.");
+      throw new Error("User not authenticated. Cannot update client.");
+    }
+    
+    console.debug(`[ClientsContext] updateClient called for id: ${id} with partial update:`, update);
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase
-      .from("clients")
-      .update(update)
-      .eq("id", id)
-      .eq("user_id", userId)
-      .select();
-    if (error) {
-      setError(error.message);
-    } else if (data) {
-      setClients(prev => prev.map(c => c.id === id ? { ...c, ...update } : c));
+
+    try {
+      // 1. Fetch current full client record from Supabase to get all existing fields
+      console.debug(`[ClientsContext] Fetching current client data for id: ${id}`);
+      const { data: currentClientData, error: fetchError } = await supabase
+        .from("clients")
+        .select("*") // Select all columns to ensure we have the full current state
+        .eq("id", id)
+        .eq("user_id", userId)
+        .single();
+
+      if (fetchError) {
+        console.error("[ClientsContext] Error fetching client before update:", fetchError);
+        setError(fetchError.message);
+        throw fetchError;
+      }
+      if (!currentClientData) {
+        console.error("[ClientsContext] Client not found in DB for id:", id);
+        throw new Error("Client not found in database. Cannot update.");
+      }
+      console.debug("[ClientsContext] Current client data fetched:", currentClientData);
+
+      // 2. Merge the current client data with the new fields provided in 'update'
+      // This ensures that fields not included in 'update' retain their existing values.
+      const mergedUpdateData: Client = {
+        ...currentClientData,
+        ...update,
+        // Ensure critical fields like id and user_id are not accidentally changed if they are part of 'update'
+        // (though 'update' is Partial<Client> and shouldn't typically include these for an update operation)
+        id: currentClientData.id, 
+        user_id: currentClientData.user_id 
+      };
+      console.debug("[ClientsContext] Merged data for Supabase update:", mergedUpdateData);
+      
+      // 3. Update Supabase with the merged complete client object
+      // And select the updated row back to confirm changes and get the latest version
+      console.debug("[ClientsContext] Sending update to Supabase for id:", id);
+      const { data: updatedClientFromDB, error: updateError } = await supabase
+        .from("clients")
+        .update(mergedUpdateData) // Send the entire merged object
+        .eq("id", id)
+        .eq("user_id", userId)
+        .select("*") // Select all fields of the updated record
+        .single();   // Expect a single record to be returned
+
+      if (updateError) {
+        console.error("[ClientsContext] Error updating client in Supabase:", updateError);
+        setError(updateError.message);
+        throw updateError;
+      }
+      if (!updatedClientFromDB) {
+        console.error("[ClientsContext] Supabase update call succeeded but returned no data for id:", id);
+        // This scenario should ideally not happen if the update was successful and .single() was used.
+        // It might indicate an issue with RLS or the select query.
+        throw new Error("Failed to retrieve updated client data from database after update.");
+      }
+      console.debug("[ClientsContext] Client updated successfully in DB. DB response:", updatedClientFromDB);
+
+      // 4. Update the local context state with this fresh, complete data from the database
+      setClients(prevClients => {
+        const newClients = prevClients.map(c =>
+          c.id === id ? updatedClientFromDB : c
+        );
+        console.debug("[ClientsContext] Local clients state updated. Client after update in context:", newClients.find(c => c.id === id));
+        return newClients;
+      });
+      // No need to call a full refetch (like fetchClients()) as we've precisely updated the specific client.
+
+    } catch (err) {
+      console.error("[ClientsContext] Exception caught in updateClient:", err);
+      // Set error state if not already set by a more specific Supabase error.
+      if (!error && err instanceof Error) { 
+        setError(err.message);
+      } else if (!error) {
+        setError("An unexpected error occurred during client update.");
+      }
+      throw err; // Re-throw to allow calling component to handle (e.g., show toast)
+    } finally {
+      setLoading(false);
+      console.debug("[ClientsContext] updateClient finished. Loading set to false for id:", id);
     }
-    setLoading(false);
   };
 
   // Delete a client

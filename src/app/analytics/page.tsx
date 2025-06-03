@@ -397,233 +397,234 @@ export default function AnalyticsPage() {
 
   return (
     <div className="p-4 md:p-8 min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="relative flex justify-center items-center mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
+      <div className="max-w-7xl mx-auto">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold mb-4 text-center bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
             Analytics
           </h1>
+          <MainNav />
         </div>
-        <MainNav />
-        
-        {/* Only show loading state on true initial load */}
-        {shouldShowLoading ? (
-          <div className="mt-8 flex items-center justify-center">
-            <p className="text-gray-500">Loading analytics...</p>
-          </div>
-        ) : !hasInvoiceData ? (
-          /* Show empty state when no invoice data */
-          <div className="mt-8">
-            <EmptyState 
-              title="No analytics yet — but the graphs are hungry"
-              subtitle="Start invoicing gigs and we'll crunch the numbers for you. The moment money starts flowing, the insights start showing."
-              icon={<TrendingUp className="h-12 w-12 text-gray-400" />}
-            />
-          </div>
-        ) : (
-          /* Show analytics when data is available */
-          <>
-            {/* Show loading skeletons only when we know there's data but calculations aren't ready */}
-            {!calculatedData ? (
-              <>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-8">
-                  {[...Array(4)].map((_, i) => (
-                    <Card key={i} className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <Skeleton className="h-4 w-[100px]" />
+        <div className="space-y-8">
+          {/* Only show loading state on true initial load */}
+          {shouldShowLoading ? (
+            <div className="mt-8 flex items-center justify-center">
+              <p className="text-gray-500">Loading analytics...</p>
+            </div>
+          ) : !hasInvoiceData ? (
+            /* Show empty state when no invoice data */
+            <div className="mt-8">
+              <EmptyState 
+                title="No analytics yet — but the graphs are hungry"
+                subtitle="Start invoicing gigs and we'll crunch the numbers for you. The moment money starts flowing, the insights start showing."
+                icon={<TrendingUp className="h-12 w-12 text-gray-400" />}
+              />
+            </div>
+          ) : (
+            /* Show analytics when data is available */
+            <>
+              {/* Show loading skeletons only when we know there's data but calculations aren't ready */}
+              {!calculatedData ? (
+                <>
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-8">
+                    {[...Array(4)].map((_, i) => (
+                      <Card key={i} className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <Skeleton className="h-4 w-[100px]" />
+                        </CardHeader>
+                        <CardContent className="flex flex-col items-center justify-center">
+                          <Skeleton className="h-8 w-[120px]" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  <div className="grid gap-6 mt-8">
+                    {[...Array(4)].map((_, i) => (
+                      <Card key={`skel-chart-${i}`} className="col-span-1 lg:col-span-2 bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
+                        <CardHeader>
+                          <Skeleton className="h-5 w-1/3" />
+                        </CardHeader>
+                        <CardContent className="flex-1 flex items-center justify-center h-[300px]">
+                          <Skeleton className="h-full w-full" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                /* Show fully calculated analytics */
+                <>
+                  {/* Mobile Key Metrics Card (List View) */}
+                  <div className="md:hidden">
+                    <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg font-semibold text-gray-900">Key Metrics</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Total Earned */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-violet-100 rounded-lg">
+                              <DollarSign className="w-4 h-4 text-violet-700" />
+                            </div>
+                            <span className="text-sm text-gray-700">Total Earned</span>
+                          </div>
+                          <span className="font-semibold text-gray-900">
+                            €{calculatedData.totalPaid?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? 0}
+                          </span>
+                        </div>
+                        {/* Total Invoiced */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-yellow-100 rounded-lg">
+                              <TrendingUp className="w-4 h-4 text-yellow-600" />
+                            </div>
+                            <span className="text-sm text-gray-700">Total Invoiced</span>
+                          </div>
+                          <span className="font-semibold text-gray-900">
+                            €{calculatedData.totalInvoiced?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? 0}
+                          </span>
+                        </div>
+                        {/* Avg. Paid Gig Value */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
+                              <Calendar className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <span className="text-sm text-gray-700">Avg. Paid Gig Value</span>
+                          </div>
+                          <span className="font-semibold text-gray-900">
+                            €{calculatedData.averageGigValue?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? '0'}
+                          </span>
+                        </div>
+                        {/* Active Gigs */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
+                              <Users className="w-4 h-4 text-purple-600" />
+                            </div>
+                            <span className="text-sm text-gray-700">Active Gigs</span>
+                          </div>
+                          <span className="font-semibold text-gray-900">
+                            {calculatedData.activeGigs ?? 0}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Desktop Top Metrics Row (4 Cards) */}
+                  <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
+                      <CardHeader className="flex flex-col items-center justify-center space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-500">Total Invoiced</CardTitle>
                       </CardHeader>
                       <CardContent className="flex flex-col items-center justify-center">
-                        <Skeleton className="h-8 w-[120px]" />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                <div className="grid gap-6 mt-8">
-                  {[...Array(4)].map((_, i) => (
-                    <Card key={`skel-chart-${i}`} className="col-span-1 lg:col-span-2 bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
-                      <CardHeader>
-                        <Skeleton className="h-5 w-1/3" />
-                      </CardHeader>
-                      <CardContent className="flex-1 flex items-center justify-center h-[300px]">
-                        <Skeleton className="h-full w-full" />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </>
-            ) : (
-              /* Show fully calculated analytics */
-              <>
-                {/* Mobile Key Metrics Card (List View) */}
-                <div className="md:hidden">
-                  <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader className="pb-4">
-                      <CardTitle className="text-lg font-semibold text-gray-900">Key Metrics</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Total Earned */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 bg-violet-100 rounded-lg">
-                            <DollarSign className="w-4 h-4 text-violet-700" />
-                          </div>
-                          <span className="text-sm text-gray-700">Total Earned</span>
-                        </div>
-                        <span className="font-semibold text-gray-900">
-                          €{calculatedData.totalPaid?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? 0}
-                        </span>
-                      </div>
-                      {/* Total Invoiced */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 bg-yellow-100 rounded-lg">
-                            <TrendingUp className="w-4 h-4 text-yellow-600" />
-                          </div>
-                          <span className="text-sm text-gray-700">Total Invoiced</span>
-                        </div>
-                        <span className="font-semibold text-gray-900">
+                        <div className="text-2xl font-bold text-yellow-600">
                           €{calculatedData.totalInvoiced?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? 0}
-                        </span>
-                      </div>
-                      {/* Avg. Paid Gig Value */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
-                            <Calendar className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <span className="text-sm text-gray-700">Avg. Paid Gig Value</span>
                         </div>
-                        <span className="font-semibold text-gray-900">
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
+                      <CardHeader className="flex flex-col items-center justify-center space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-500">Total Earned</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex flex-col items-center justify-center">
+                        <div className="text-2xl font-bold text-violet-700">
+                          €{calculatedData.totalPaid?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? 0}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
+                      <CardHeader className="flex flex-col items-center justify-center space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-500">Avg. Paid Gig Value</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex flex-col items-center justify-center">
+                        <div className="text-2xl font-bold text-gray-700">
                           €{calculatedData.averageGigValue?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? '0'}
-                        </span>
-                      </div>
-                      {/* Active Gigs */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
-                            <Users className="w-4 h-4 text-purple-600" />
-                          </div>
-                          <span className="text-sm text-gray-700">Active Gigs</span>
                         </div>
-                        <span className="font-semibold text-gray-900">
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
+                      <CardHeader className="flex flex-col items-center justify-center space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-500">Active Gigs</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex flex-col items-center justify-center">
+                        <div className="text-2xl font-bold text-gray-700">
                           {calculatedData.activeGigs ?? 0}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Desktop Top Metrics Row (4 Cards) */}
-                <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader className="flex flex-col items-center justify-center space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-gray-500">Total Invoiced</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center">
-                      <div className="text-2xl font-bold text-yellow-600">
-                        €{calculatedData.totalInvoiced?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? 0}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader className="flex flex-col items-center justify-center space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-gray-500">Total Earned</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center">
-                      <div className="text-2xl font-bold text-violet-700">
-                        €{calculatedData.totalPaid?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? 0}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader className="flex flex-col items-center justify-center space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-gray-500">Avg. Paid Gig Value</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center">
-                      <div className="text-2xl font-bold text-gray-700">
-                        €{calculatedData.averageGigValue?.toLocaleString('en-IE', { maximumFractionDigits: 0 }) ?? '0'}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader className="flex flex-col items-center justify-center space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-gray-500">Active Gigs</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center">
-                      <div className="text-2xl font-bold text-gray-700">
-                        {calculatedData.activeGigs ?? 0}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Charts Grid - Mobile: 1 column, MD and up: 2 columns */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                  {/* Top Left: Pipeline View */}
-                  <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-semibold">Pipeline Preview</CardTitle>
-                      <p className="text-sm text-gray-500 mt-1">What's booked and what's still brewing</p>
-                    </CardHeader>
-                    <CardContent className="h-[350px]">
-                      <PipelineView data={{ gigs }} />
-                    </CardContent>
-                  </Card>
-
-                  {/* Top Right: Cash Flow Calendar (formerly Monthly Paid Gigs) */}
-                  <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
-                    <CardHeader>
-                      <div className="flex justify-between items-start md:items-center">
-                        <div>
-                          <CardTitle className="text-xl font-semibold">Cash Flow Calendar</CardTitle>
-                          <p className="text-sm text-gray-500 mt-1">When you actually got paid (by gig date)</p>
                         </div>
-                        <div className="hidden md:flex"> {/* Hide on mobile, show on md and up */}
-                          {renderYearToggle(earningsYear, setEarningsYear)}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Charts Grid - Mobile: 1 column, MD and up: 2 columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    {/* Top Left: Pipeline View */}
+                    <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-xl font-semibold">Pipeline Preview</CardTitle>
+                        <p className="text-sm text-gray-500 mt-1">What's booked and what's still brewing</p>
+                      </CardHeader>
+                      <CardContent className="h-[350px]">
+                        <PipelineView data={{ gigs }} />
+                      </CardContent>
+                    </Card>
+
+                    {/* Top Right: Cash Flow Calendar (formerly Monthly Paid Gigs) */}
+                    <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
+                      <CardHeader>
+                        <div className="flex justify-between items-start md:items-center">
+                          <div>
+                            <CardTitle className="text-xl font-semibold">Cash Flow Calendar</CardTitle>
+                            <p className="text-sm text-gray-500 mt-1">When you actually got paid (by gig date)</p>
+                          </div>
+                          <div className="hidden md:flex"> {/* Hide on mobile, show on md and up */}
+                            {renderYearToggle(earningsYear, setEarningsYear)}
+                          </div>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="h-[350px]">
-                      {calculatedData.monthlyEarnings.some(month => month.amount > 0) ? (
-                        <MonthlyEarnings data={calculatedData.monthlyEarnings} />
-                      ) : (
-                        <EmptyState 
-                          icon={<BarChart2 className="w-10 h-10 text-gray-400"/>} 
-                          title="No earnings data" 
-                          subtitle="No paid gigs found for the selected year."
-                        />
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                      </CardHeader>
+                      <CardContent className="h-[350px]">
+                        {calculatedData.monthlyEarnings.some(month => month.amount > 0) ? (
+                          <MonthlyEarnings data={calculatedData.monthlyEarnings} />
+                        ) : (
+                          <EmptyState 
+                            icon={<BarChart2 className="w-10 h-10 text-gray-400"/>} 
+                            title="No earnings data" 
+                            subtitle="No paid gigs found for the selected year."
+                          />
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
 
-                {/* Bottom Charts: Bookings Funnel and Cash Flow Timing */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                  {/* Bookings Funnel */}
-                  <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-semibold">Bookings Funnel</CardTitle>
-                      <p className="text-sm text-gray-500 mt-1">How your gigs move through the pipeline</p>
-                    </CardHeader>
-                    <CardContent className="h-[350px]">
-                        <BookingFunnel data={calculatedData.bookingFunnel} />
-                    </CardContent>
-                  </Card>
+                  {/* Bottom Charts: Bookings Funnel and Cash Flow Timing */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    {/* Bookings Funnel */}
+                    <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-xl font-semibold">Bookings Funnel</CardTitle>
+                        <p className="text-sm text-gray-500 mt-1">How your gigs move through the pipeline</p>
+                      </CardHeader>
+                      <CardContent className="h-[350px]">
+                          <BookingFunnel data={calculatedData.bookingFunnel} />
+                      </CardContent>
+                    </Card>
 
-                  {/* Cash Flow Timing */}
-                  <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-semibold">Cash Flow Timing</CardTitle>
-                      <p className="text-sm text-gray-500 mt-1">How long it takes to get paid</p>
-                    </CardHeader>
-                    <CardContent className="h-[350px]">
-                        <PaymentDelayChart data={calculatedData.paymentDelay.delayData} />
-                    </CardContent>
-                  </Card>
-                </div>
-              </>
-            )}
-          </>
-        )}
+                    {/* Cash Flow Timing */}
+                    <Card className="bg-white/50 backdrop-blur-sm border border-gray-200/50 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-xl font-semibold">Cash Flow Timing</CardTitle>
+                        <p className="text-sm text-gray-500 mt-1">How long it takes to get paid</p>
+                      </CardHeader>
+                      <CardContent className="h-[350px]">
+                          <PaymentDelayChart data={calculatedData.paymentDelay.delayData} />
+                      </CardContent>
+                    </Card>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

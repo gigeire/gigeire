@@ -14,8 +14,8 @@ export async function POST(req: Request) {
     const cookieStore = cookies();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user?.id) {
-        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-      }
+  return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+}
     const userId = user.id;
 
     // Create Stripe Checkout session

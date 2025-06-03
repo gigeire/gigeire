@@ -82,6 +82,19 @@ export async function POST(req: Request) {
             { status: 400 }
           );
         }
+
+        if (!session.subscription) {
+          console.warn("No subscription ID on session");
+          return NextResponse.json({ success: true });
+        }
+
+        // Update subscription metadata to include user_id
+        await stripe.subscriptions.update(session.subscription.toString(), {
+          metadata: {
+            user_id: supabaseUserId,
+          },
+        });
+
         const updateResult = await updateUserPlan(supabaseUserId, "premium");
         if (updateResult !== true) {
           console.error("Error updating user plan after checkout:", updateResult);

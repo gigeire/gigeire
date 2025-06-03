@@ -426,19 +426,33 @@ export default function ClientDetailPage() {
       toast({ title: "Error", description: "Client data is not available for update.", variant: "destructive"});
       return;
     }
+    console.debug(`[ClientDetailPage] handleClientSubmit called for client ID: ${client.id} with data:`, clientData);
     try {
+      // The updateClient function from context now handles fetch-merge-update-refetch_single_client
       await updateClient(client.id, clientData);
-      toast({ title: "Success", description: "Client information updated." });
-      setClientModalOpen(false);
-      if (clientData.name && clientData.name !== clientNameFromUrl) {
-         const newSlug = encodeURIComponent(clientData.name.toLowerCase().replace(/ /g, '-'));
-         router.push(`/clients/${newSlug}`);
-      } else {
-        await refetchClients();
+      
+      toast({ title: "Success", description: "Client information updated successfully." });
+      setClientModalOpen(false); // Close modal on success
+
+      // If client name changed, the URL slug needs to change.
+      // We use router.replace to avoid adding the old slug to history.
+      const newName = clientData.name?.trim();
+      if (newName && newName.toLowerCase() !== clientNameFromUrl.toLowerCase()) {
+        console.debug(`[ClientDetailPage] Client name changed from "${clientNameFromUrl}" to "${newName}". Replacing route.`);
+        const newSlug = encodeURIComponent(newName.toLowerCase().replace(/\s+/g, '-'));
+        router.replace(`/clients/${newSlug}`, { scroll: false }); // Soft navigation to the new slug
       }
+      // No explicit refetchClients() needed here as updateClient already updated the context precisely.
+      // The useMemo deriving 'client' on this page will pick up the change from the context.
+
     } catch (error: any) {
-      console.error("Error updating client:", error);
-      toast({ title: "Error", description: `Failed to update client: ${error.message}`, variant: "destructive" });
+      console.error("[ClientDetailPage] Error updating client:", error);
+      toast({ 
+        title: "Update Failed", 
+        description: error.message || "Could not update client information. Please try again.", 
+        variant: "destructive" 
+      });
+      // Modal remains open for user to retry or correct.
     }
   };
 

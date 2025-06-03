@@ -19,84 +19,104 @@ export default function SettingsPage() {
   const [stripeCheckoutError, setStripeCheckoutError] = useState<string | null>(null);
 
   // State for user plan
+  // Possible states: 'free', 'premium', or undefined (if undetermined or during initial load)
   const [userPlan, setUserPlan] = useState<'free' | 'premium' | undefined>(undefined);
   const [planLoading, setPlanLoading] = useState<boolean>(true);
   const [planFetchError, setPlanFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserPlan = async () => {
-      console.log("[SettingsPage] Fetching user plan...");
+      console.debug("[SettingsPage] Starting fetchUserPlan...");
       setPlanLoading(true);
       setPlanFetchError(null);
-      setUserPlan(undefined);
+      setUserPlan(undefined); // Reset plan state before fetching
 
       try {
+        console.debug("[SettingsPage] Attempting to get user session...");
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
           console.error("[SettingsPage] Session error:", sessionError.message);
           setPlanFetchError("Auth: Could not retrieve user session.");
-          setUserPlan(undefined);
+          // setUserPlan remains undefined
+          setPlanLoading(false);
           return;
         }
 
         if (!session?.user?.id) {
-          console.log("[SettingsPage] User not authenticated.");
-          setPlanFetchError("Auth: User not authenticated.");
-          setUserPlan(undefined);
+          console.warn("[SettingsPage] User not authenticated during plan fetch.");
+          setPlanFetchError("Auth: User not authenticated. Please log in.");
+          // setUserPlan remains undefined
+          setPlanLoading(false);
           return;
         }
 
         const userId = session.user.id;
-        console.log(`[SettingsPage] Authenticated user ID: ${userId}`);
+        console.debug(`[SettingsPage] Authenticated user ID: ${userId}`);
 
+        console.debug(`[SettingsPage] Fetching plan for user ID: ${userId} from 'users' table...`);
         const { data: userData, error: userFetchError } = await supabase
           .from("users")
           .select("plan")
           .eq("id", userId)
           .single();
 
-        console.log("[SettingsPage] Raw userData from \'users\' table:", userData);
-        console.log("[SettingsPage] Error fetching from \'users\' table:", userFetchError);
+        console.debug("[SettingsPage] Raw userData from 'users' table query:", userData);
+        console.debug("[SettingsPage] Error object from 'users' table query:", userFetchError);
 
         if (userFetchError) {
-          console.error("[SettingsPage] Error fetching user plan from \'users\' table:", userFetchError.message);
-          setPlanFetchError(`DB: Failed to fetch plan. (${userFetchError.message})`);
-          setUserPlan("free"); // Default to free on DB error
+          // PGRST116 means no rows found, which is a valid case if the user row doesn't exist yet or plan is null.
+          // We'll treat it as 'no plan info' rather than a critical DB error.
+          if (userFetchError.code === 'PGRST116') {
+            console.warn(`[SettingsPage] No user record found in 'users' table for ID: ${userId} or plan is null. Error:`, userFetchError.message);
+            setPlanFetchError("DB: User profile not found or plan not set.");
+            setUserPlan(undefined); // Explicitly undefined, rely on fallback UI
+          } else {
+            console.error("[SettingsPage] Error fetching user plan from 'users' table:", userFetchError.message);
+            setPlanFetchError(`DB: Failed to fetch plan. (${userFetchError.code})`);
+            setUserPlan(undefined); // Explicitly undefined, rely on fallback UI
+          }
+          setPlanLoading(false);
           return;
         }
 
+        // Successfully fetched userData (or it's null, meaning no row which is handled by PGRST116 above)
         if (userData && typeof userData.plan === 'string') {
-          const fetchedPlan = userData.plan.trim().toLowerCase();
-          console.log(`[SettingsPage] Processed plan string: '${fetchedPlan}'`);
-          console.log(`[SettingsPage] Raw plan value: '${userData.plan}'`);
-          console.log(`[SettingsPage] Plan type: ${typeof userData.plan}`);
+          const rawPlanValue = userData.plan;
+          const fetchedPlan = rawPlanValue.trim().toLowerCase();
+          console.debug(`[SettingsPage] Raw plan value from DB: '${rawPlanValue}', Processed plan string: '${fetchedPlan}'`);
+          
           if (fetchedPlan === "premium") {
-            console.log("[SettingsPage] Setting user plan to: premium");
+            console.debug("[SettingsPage] Setting user plan to: premium");
             setUserPlan("premium");
-          } else {
-            console.log(`[SettingsPage] Fetched plan '${fetchedPlan}' is not 'premium'. Setting to: free`);
+          } else if (fetchedPlan === "free") {
+            console.debug(`[SettingsPage] Fetched plan '${fetchedPlan}' is 'free'. Setting to: free`);
             setUserPlan("free");
+          } else {
+            console.warn(`[SettingsPage] Fetched plan '${fetchedPlan}' is not 'premium' or 'free'. Treating as undetermined.`);
+            setPlanFetchError(`Invalid plan value: '${rawPlanValue}'.`);
+            setUserPlan(undefined); // Plan value is unrecognized
           }
         } else {
-          console.log("[SettingsPage] No user data row found, or plan field is not a string. UserData:", userData);
-          console.log("[SettingsPage] Plan field type:", typeof userData?.plan);
-          setPlanFetchError("DB: No plan information found or plan field is invalid.");
-          setUserPlan("free"); // Default to free if no/invalid plan data
+          // This case handles if userData is null (should be caught by PGRST116) or userData.plan is not a string (e.g. null, number)
+          console.warn("[SettingsPage] User data found, but 'plan' field is missing, null, or not a string. UserData:", userData);
+          setPlanFetchError("DB: Plan information is missing or invalid in your profile.");
+          setUserPlan(undefined); // Plan data is invalid or missing
         }
 
       } catch (err: any) {
         console.error("[SettingsPage] Unexpected error in fetchUserPlan:", err);
-        setPlanFetchError(`Unexpected error: ${err.message}`);
-        setUserPlan("free"); // Default to free on unexpected error
+        setPlanFetchError(`Unexpected error: ${err.message || 'Unknown error'}`);
+        setUserPlan(undefined); // Default to undefined on unexpected error
       } finally {
         setPlanLoading(false);
-        console.log("[SettingsPage] Finished fetching user plan.");
+        console.debug("[SettingsPage] Finished fetchUserPlan. Loading: false, Error: ", planFetchError, "Plan: ", userPlan);
       }
     };
 
     fetchUserPlan();
-  }, [supabase]);
+  }, [supabase]); // Rerun when supabase client instance changes (should be stable)
+  // IMPORTANT: Do not add userPlan or planFetchError to dependencies here, it will cause infinite loops.
 
   const handleLogout = async () => {
     if (confirm("Are you sure you want to logout?")) {
@@ -139,26 +159,47 @@ export default function SettingsPage() {
         <MainNav />
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* Current Plan Section */}
-          <section className="bg-white rounded-2xl shadow p-6 md:p-8 flex flex-col justify-between items-center text-center h-full">
+          <section className="bg-white rounded-2xl shadow p-6 md:p-8 flex flex-col justify-between items-center text-center h-full min-h-[250px]">
             {planLoading ? (
-              <div className="flex flex-col items-center justify-center h-40 w-full">
+              <div className="flex flex-col items-center justify-center h-full w-full">
                 <svg className="animate-spin h-8 w-8 text-gray-400 mb-3" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V4a10 10 0 00-9.95 9.5H2m2 0A8 8 0 0112 4v-.5A9.5 9.5 0 002.5 12H4zm8-8a8 8 0 018 8h.5A9.5 9.5 0 0012 2.5V4z" />
                 </svg>
                 <span className="text-gray-500">Loading your plan...</span>
               </div>
-            ) : planFetchError ? (
-              <div className="py-4 h-40 flex flex-col justify-center">
-                <p className="text-lg font-semibold text-gray-700 mb-2">Plan Information</p>
-                <p className="text-sm text-red-600">{planFetchError}</p>
-                <p className="text-xs text-gray-400 mt-1">Please refresh or contact support.</p>
-              </div>
+            ) : userPlan === 'premium' ? (
+              <>
+                <div>
+                  <div className="flex items-center gap-2 mb-4 justify-center">
+                    {/* Premium Icon: Filled Crown */}
+                    <Crown className="w-7 h-7 text-amber-500 fill-amber-400" strokeWidth={1} />
+                    <h2 className="text-xl font-bold text-gray-800">Premium Plan</h2>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Unlimited gigs — thank you for supporting GigÉire!
+                  </p>
+                </div>
+                <a
+                  href={`mailto:${supportEmail}?subject=Premium Support Request`}
+                  className="w-3/4 flex justify-center"
+                  aria-label="Contact Support for Premium Plan"
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full px-4 py-2 text-green-700 border-green-200 hover:bg-green-50 focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:outline-none text-sm"
+                  >
+                    <Mail className="w-4 h-4 mr-2" /> Contact Support
+                  </Button>
+                </a>
+              </>
             ) : userPlan === 'free' ? (
               <>
                 <div>
                   <div className="flex items-center gap-2 mb-4 justify-center">
-                    <Crown className="w-6 h-6 text-amber-500" strokeWidth={2} />
+                    {/* Free Icon: Outline Crown */}
+                    <Crown className="w-7 h-7 text-amber-600" strokeWidth={2} />
                     <h2 className="text-xl font-bold text-gray-800">Free Plan</h2>
                   </div>
                   <p className="text-sm text-gray-500 mb-6">
@@ -168,43 +209,38 @@ export default function SettingsPage() {
                 <Button
                   onClick={handleUpgradeClick}
                   className="w-3/4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:outline-none"
-                  aria-label="Upgrade to Premium"
+                  aria-label="Upgrade to Premium Plan"
                   disabled={stripeCheckoutLoading}
                 >
                   {stripeCheckoutLoading ? "Redirecting..." : "Upgrade to Premium"}
                 </Button>
                 {stripeCheckoutError && <div className="text-red-600 text-sm mt-2 w-full">{stripeCheckoutError}</div>}
               </>
-            ) : userPlan === 'premium' ? (
-              <>
-                <div>
-                  <div className="flex items-center gap-2 mb-4 justify-center">
-                    <Crown className="w-6 h-6 text-amber-500 fill-amber-400" strokeWidth={0} />
-                    <h2 className="text-xl font-bold text-gray-800">Premium Plan</h2>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-6">
-                    Unlimited gigs — thank you for supporting our development!
-                  </p>
-                </div>
+            // Fallback: Error occurred or plan is undetermined
+            ) : ( 
+              <div className="py-4 h-full flex flex-col justify-center items-center">
+                <h2 className="text-xl font-bold text-gray-800 mb-2">Plan Information</h2>
+                {planFetchError ? (
+                  <>
+                    <p className="text-sm text-red-600 mb-1">Could not load your plan details.</p>
+                    <p className="text-xs text-gray-500 mb-4">Error: {planFetchError}</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500 mb-4">We could not determine your current plan.</p>
+                )}
                 <a
-                  href={`mailto:${supportEmail}`}
+                  href={`mailto:${supportEmail}?subject=Help with my Plan`}
                   className="w-3/4 flex justify-center"
-                  aria-label="Contact Support"
+                  aria-label="Contact Support about your plan"
                 >
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full px-4 py-2 text-green-700 border-green-200 hover:bg-green-50 focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:outline-none text-sm"
+                    className="w-full px-4 py-2 text-blue-700 border-blue-200 hover:bg-blue-50 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-none text-sm"
                   >
-                    Contact Support
+                     <Mail className="w-4 h-4 mr-2" /> Contact Support
                   </Button>
                 </a>
-              </>
-            ) : ( 
-              <div className="py-4 h-40 flex flex-col justify-center">
-                <p className="text-lg font-semibold text-gray-700 mb-2">Plan Information</p>
-                <p className="text-sm text-gray-500">Could not determine your current plan.</p>
-                <p className="text-xs text-gray-400 mt-1">Please contact support.</p>
               </div>
             )}
           </section>
