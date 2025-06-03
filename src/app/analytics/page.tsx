@@ -398,19 +398,10 @@ export default function AnalyticsPage() {
   return (
     <div className="p-4 md:p-8 min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="relative flex justify-center items-center mb-8">
+        <div className="relative flex justify-center items-center mb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
             Analytics
           </h1>
-          {/* <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            className="flex items-center gap-2 absolute right-0 hover:bg-gray-100 transition-colors"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button> */}
         </div>
         <MainNav />
         

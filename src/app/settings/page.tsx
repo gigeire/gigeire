@@ -69,6 +69,8 @@ export default function SettingsPage() {
         if (userData && typeof userData.plan === 'string') {
           const fetchedPlan = userData.plan.trim().toLowerCase();
           console.log(`[SettingsPage] Processed plan string: '${fetchedPlan}'`);
+          console.log(`[SettingsPage] Raw plan value: '${userData.plan}'`);
+          console.log(`[SettingsPage] Plan type: ${typeof userData.plan}`);
           if (fetchedPlan === "premium") {
             console.log("[SettingsPage] Setting user plan to: premium");
             setUserPlan("premium");
@@ -78,6 +80,7 @@ export default function SettingsPage() {
           }
         } else {
           console.log("[SettingsPage] No user data row found, or plan field is not a string. UserData:", userData);
+          console.log("[SettingsPage] Plan field type:", typeof userData?.plan);
           setPlanFetchError("DB: No plan information found or plan field is invalid.");
           setUserPlan("free"); // Default to free if no/invalid plan data
         }
