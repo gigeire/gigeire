@@ -166,7 +166,7 @@ export function StandardInvoiceModal({
     yPos = Math.max(senderY, metaY) + 10;
 
     doc.setFontSize(8).setFont("helvetica", "normal").setTextColor(120);
-    doc.text("BILLED TO", margin, yPos); yPos += 4;
+    doc.text("BILLED TO", margin, yPos); yPos += 8;
     doc.setFontSize(12).setFont("helvetica", "bold").setTextColor(30);
     doc.text(gig.client || "N/A", margin, yPos); yPos += 6;
     doc.setFontSize(10).setFont("helvetica", "normal");

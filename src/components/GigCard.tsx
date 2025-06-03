@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -185,6 +185,17 @@ export function GigCard({ gig, onEdit, onClone, onDelete, onStatusChange }: GigC
     }
     handleEdit();
   };
+
+  // Automatically show SenderInfoModal if sender info is blank when attempting to generate invoice
+  useEffect(() => {
+    if (showStandardInvoiceModal && (!senderInfo?.name || !senderInfo?.email)) {
+      setShowStandardInvoiceModal(false);
+      setShowSenderInfoModal(true);
+    }
+  }, [showStandardInvoiceModal, senderInfo]);
+
+  // Optionally, clear sender info from localStorage on logout (if logout logic is here)
+  // If not, this should be handled in the auth/logout logic or SenderInfoContext
 
   return (
     <>
