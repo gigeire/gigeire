@@ -1,3 +1,5 @@
+/* CSS Module: All styles should be scoped to local classes. */
+
 .hero {
     min-height: 100vh;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -5,7 +7,15 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    padding: 2rem;
+    padding: 0 2rem; /* Adjusted for full viewport alignment */
+    width: 100vw;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    box-sizing: border-box;
+    margin-top: 0; /* Ensure no top margin */
+    border: none; /* Ensure no borders causing gaps */
 }
 
 .heroContent {
@@ -34,6 +44,7 @@
     font-size: 1.25rem;
     margin-bottom: 2rem;
     opacity: 0.9;
+    font-weight: 400; /* Ensure correct weight */
 }
 
 .ctaButton {
@@ -64,7 +75,7 @@
     justify-content: center;
 }
 
-.creativePerson {
+.creativePerson { /* This class might be unused, keeping for now if needed by original structure */
     width: 200px;
     height: 200px;
     border-radius: 50%;
@@ -88,29 +99,10 @@
     max-width: 280px;
 }
 
-.ui1 {
-    top: 10%;
-    left: -10%;
-    animation-delay: 0s;
-}
-
-.ui2 {
-    top: 20%;
-    right: -15%;
-    animation-delay: 1s;
-}
-
-.ui3 {
-    bottom: 20%;
-    left: -15%;
-    animation-delay: 2s;
-}
-
-.ui4 {
-    bottom: 10%;
-    right: -10%;
-    animation-delay: 0.5s;
-}
+.ui1 { top: 10%; left: -10%; animation-delay: 0s; }
+.ui2 { top: 20%; right: -15%; animation-delay: 1s; }
+.ui3 { bottom: 20%; left: -15%; animation-delay: 2s; }
+.ui4 { bottom: 10%; right: -10%; animation-delay: 0.5s; }
 
 @keyframes float {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -127,6 +119,7 @@
 .uiContent {
     color: #6b7280;
     font-size: 0.8rem;
+    font-weight: 400; /* Ensure correct weight */
 }
 
 .uiMetric {
@@ -146,15 +139,8 @@
     display: inline-block;
 }
 
-.uiStatusYellow {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.uiStatusPurple {
-    background: #f3e8ff;
-    color: #9333ea;
-}
+.uiStatusYellow { background: #fef3c7; color: #d97706; }
+.uiStatusPurple { background: #f3e8ff; color: #9333ea; }
 
 .section {
     padding: 5rem 2rem;
@@ -167,6 +153,7 @@
     text-align: center;
     margin-bottom: 3rem;
     color: #1f2937;
+    font-weight: 400; /* Ensure correct weight, headings in hero/final CTA are heavier */
 }
 
 .problemCards {
@@ -186,14 +173,17 @@
     transition: transform 0.3s ease;
 }
 
-.problemCard:hover {
-    transform: translateY(-5px);
-}
+.problemCard:hover { transform: translateY(-5px); }
 
 .problemCard h3 {
     color: #ef4444;
     margin-bottom: 1rem;
     font-size: 1.2rem;
+    font-weight: 400; /* Ensure correct weight */
+}
+
+.problemCard p {
+    font-weight: 400; /* Ensure correct weight */
 }
 
 .features {
@@ -216,6 +206,10 @@
     gap: 2rem;
 }
 
+.featuresGrid h2 { /* Specific heavier h2 for this section */
+    font-weight: 700;
+}
+
 .featureCard {
     background: white;
     padding: 2rem;
@@ -233,6 +227,11 @@
     color: #16a34a;
     margin-bottom: 1rem;
     font-size: 1.3rem;
+    font-weight: 400; /* Ensure correct weight */
+}
+
+.featureCard p {
+    font-weight: 400; /* Ensure correct weight */
 }
 
 .finalCta {
@@ -257,69 +256,94 @@
 .finalCta h2 {
     color: white;
     margin-bottom: 2rem;
+    font-weight: 700; /* Ensure correct weight */
+}
+
+.finalCta p {
+    font-weight: 400; /* Ensure correct weight */
 }
 
 .footer {
     background: #1f2937;
     color: white;
-    padding: 2rem;
+    padding: 2rem 0; /* Vertical padding on the footer container */
     text-align: center;
+    width: 100%; /* Takes full width of its parent. Ensure parent (body/html) has no horizontal margin/padding */
+    box-sizing: border-box;
+    margin-top: auto; /* Helps push to bottom if main content is short */
+    margin-bottom: 0; /* Explicitly remove bottom margin */
+    font-weight: 400; /* Base font weight for footer text */
+    overflow: hidden; /* Prevents any internal content from breaking out and causing scrollbars */
 }
 
 .footerContent {
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 0 auto; /* Center the content area */
+    padding: 0 2rem; /* Horizontal padding for content */
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Key for left, center, right alignment */
     align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 1rem; /* Gap between items if they wrap */
 }
 
 .footerLeft {
-    color: #9ca3af;
+    /* "Made with ❤️ in Ireland" */
+    text-align: left;
     font-size: 1rem;
+    color: #9ca3af;
+    font-weight: 400;
+    /* Allow flex to size, or give a soft basis if needed */
+    flex-shrink: 0; /* Don't shrink if space is tight, let others adjust or wrap */
 }
 
 .footerCenter {
+    /* "GigÉire" */
+    text-align: center;
     font-size: 1.2rem;
     font-weight: 700;
     color: white;
+    /* To ensure it stays in the visual center when space-between is used: */
+    /* One way is to let it be sized by content and ensure outer elements are flexible */
+    /* Or give it more explicit flex properties if needed, e.g. margin: 0 auto on this item if parent is only display:flex */
+    flex-grow: 1; /* Allows it to take up space to help center it */
+    /* flex-shrink: 0; */ /* Already there, good */
 }
 
 .footerLinks {
+    /* Privacy, Terms, Contact, Instagram */
     display: flex;
-    gap: 2rem;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1.5rem; /* Adjusted gap for better fit if space is tight */
     font-size: 1rem;
+    font-weight: 400;
+    flex-shrink: 0; /* Don't shrink if space is tight */
 }
 
 .footerLink {
     color: #9ca3af;
     text-decoration: none;
     transition: color 0.3s ease;
-    font-size: 1rem;
+    display: flex; /* For icon alignment within the link */
+    align-items: center;
 }
 
 .footerLink:hover {
     color: #4ade80 !important;
 }
 
+/* Responsive adjustments */
 @media (max-width: 1024px) {
-    .heroContent {
-        gap: 3rem;
-    }
-    .heroText {
-        margin-right: 0;
-    }
+    .heroContent { gap: 3rem; }
+    .heroText { margin-right: 0; }
 }
 
 @media (max-width: 768px) {
-    body {
-        overflow-x: hidden;
-    }
     .hero {
-        padding: 1rem;
-        overflow-x: hidden;
+        padding: 0 1rem; /* Adjusted for full viewport alignment on mobile */
+        min-height: 100vh; /* Ensure full height on mobile too */
+        margin-top: 0;
     }
     .heroContent {
         grid-template-columns: 1fr;
@@ -329,22 +353,10 @@
         box-sizing: border-box;
         max-width: 100%;
     }
-    .heroText {
-        margin-right: 0;
-        padding: 0 0.5rem;
-    }
-    .heroText h1 {
-        font-size: 2.2rem;
-        line-height: 1.25;
-    }
-    .heroText p {
-        font-size: 1.1rem;
-        margin-bottom: 1.5rem;
-    }
-    .ctaButton {
-        font-size: 1rem;
-        padding: 0.9rem 1.8rem;
-    }
+    .heroText { margin-right: 0; padding: 0 0.5rem; }
+    .heroText h1 { font-size: 2.2rem; line-height: 1.25; }
+    .heroText p { font-size: 1.1rem; margin-bottom: 1.5rem; }
+    .ctaButton { font-size: 1rem; padding: 0.9rem 1.8rem; }
     .heroVisual {
         display: flex;
         flex-direction: column;
@@ -357,11 +369,7 @@
         margin: 0 auto;
         position: relative;
     }
-    .creativePerson, .glowingbookContainer {
-        width: 150px;
-        height: 150px;
-        font-size: 3rem;
-    }
+    .creativePerson, .glowingbookContainer { width: 150px; height: 150px; font-size: 3rem; }
     .floatingUi {
         position: static;
         margin: 0.5rem 0.5rem 0 0.5rem;
@@ -379,110 +387,73 @@
         width: 100%;
         margin-top: 1.2rem;
     }
-    .floatingUi .uiHeader {
-        font-size: 1rem;
-    }
-    .floatingUi .uiContent {
-        font-size: 0.9rem;
-    }
-    .problemCards {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto;
-        gap: 1rem;
-        margin-top: 2rem;
-    }
-    .problemCard {
-        padding: 1rem 0.75rem;
-        font-size: 0.9rem;
-    }
-    .problemCard h3 {
-        font-size: 1.1rem;
-    }
-    .section h2 {
-        font-size: 1.8rem;
-        margin-bottom: 2rem;
-    }
-    .featuresGrid {
-        padding: 2.5rem 1rem;
-        gap: 1.2rem;
-    }
-    .featureCard {
-        padding: 1rem 0.75rem;
-        font-size: 0.9rem;
-    }
-    .featureCard h3 {
-        font-size: 1.1rem;
-    }
-    .finalCtaContent {
-        padding: 3rem 1rem;
-    }
+    .floatingUi .uiHeader { font-size: 1rem; }
+    .floatingUi .uiContent { font-size: 0.9rem; }
+    .problemCards { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 1rem; margin-top: 2rem; }
+    .problemCard { padding: 1rem 0.75rem; font-size: 0.9rem; }
+    .problemCard h3 { font-size: 1.1rem; }
+    .section h2 { font-size: 1.8rem; margin-bottom: 2rem; }
+    .featuresGrid { padding: 2.5rem 1rem; gap: 1.2rem; }
+    .featureCard { padding: 1rem 0.75rem; font-size: 0.9rem; }
+    .featureCard h3 { font-size: 1.1rem; }
+    .finalCtaContent { padding: 3rem 1rem; }
     .finalCta h2 {
-        font-size: 2rem;
+        font-size: 1.35rem !important; /* 25% smaller than 1.8rem */
+        font-weight: 700 !important;
+        margin-bottom: 1.2rem !important;
     }
+    .finalCta p {
+        font-size: 0.9rem !important; /* 25% smaller than 1.2rem */
+        margin-bottom: 1.2rem !important;
+    }
+    .ctaButton {
+        font-size: 1rem !important;
+        padding: 0.9rem 1.8rem !important;
+    }
+
     .footerContent {
-        padding: 1.5rem 1rem;
-        gap: 1rem;
+        flex-direction: column; /* Stack items vertically */
+        align-items: center;    /* Center items horizontally when stacked */
+        gap: 1rem;             /* Space between stacked items */
+        padding: 0 1rem;      /* Adjust padding for mobile */
     }
-    .brandTagline {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 0.3rem;
-        margin-bottom: 0.9rem;
+    .footerLeft, .footerCenter, .footerLinks {
+        text-align: center;    /* Center text within each item */
+        width: 100%;           /* Make each item take full width */
+        margin-bottom: 0.75rem; /* Space below each item, except the last */
+        justify-content: center; /* Center flex content (for .footerLinks) */
     }
-    .heroText {
-        text-align: center;
+    .footerLeft:last-child, .footerCenter:last-child, .footerLinks:last-child {
+        margin-bottom: 0; /* No margin for the last item */
     }
-    .hideOnMobile {
-        display: none !important;
+    .footerLinks {
+        gap: 1rem; /* Adjust gap for links on mobile */
+    }
+    .brandTagline { flex-direction: column; align-items: center; text-align: center; gap: 0.3rem; margin-bottom: 0.9rem; }
+    .heroText { text-align: center; }
+    .hideOnMobile { display: none !important; }
+    .featuresGrid h2 {
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 2rem !important;
     }
 }
 
 @media (max-width: 480px) {
-    .heroText h1 {
-        font-size: 1.9rem;
-    }
-    .heroText p {
-        font-size: 1rem;
-    }
-    .ctaButton {
-        font-size: 0.9rem;
-        padding: 0.8rem 1.5rem;
-    }
-    .creativePerson, .glowingbookContainer {
-        width: 120px;
-        height: 120px;
-        font-size: 2.5rem;
-    }
-    .floatingUi {
-        max-width: 110px;
-        padding: 0.5rem;
-        font-size: 0.7rem;
-        transform: scale(0.8);
-    }
-    .problemCards {
-        gap: 0.75rem;
-    }
-    .problemCard {
-        padding: 0.8rem 0.5rem;
-        font-size: 0.85rem;
-    }
-    .problemCard h3 {
-        font-size: 1rem;
-    }
-    .section h2 {
-        font-size: 1.6rem;
-    }
-    .featureCard {
-        padding: 0.8rem 0.5rem;
-        font-size: 0.85rem;
-    }
-    .featureCard h3 {
-        font-size: 1rem;
-    }
+    .heroText h1 { font-size: 1.9rem; }
+    .heroText p { font-size: 1rem; }
+    .ctaButton { font-size: 0.9rem; padding: 0.8rem 1.5rem; }
+    .creativePerson, .glowingbookContainer { width: 120px; height: 120px; font-size: 2.5rem; }
+    .floatingUi { max-width: 110px; padding: 0.5rem; font-size: 0.7rem; transform: scale(0.8); }
+    .problemCards { gap: 0.75rem; }
+    .problemCard { padding: 0.8rem 0.5rem; font-size: 0.85rem; }
+    .problemCard h3 { font-size: 1rem; }
+    .section h2 { font-size: 1.6rem; }
+    .featureCard { padding: 0.8rem 0.5rem; font-size: 0.85rem; }
+    .featureCard h3 { font-size: 1rem; }
 }
 
-.glowingbookContainer {
+.glowingbookContainer { /* For the floating book image */
     position: relative;
     display: flex;
     align-items: center;
@@ -510,7 +481,7 @@
     transition: background 0.3s;
 }
 
-.glowingbook {
+.glowingbook { /* If this class is used for the image itself */
     border: none;
     outline: none;
     box-shadow: 0 0 0px rgba(0,0,0,0);
@@ -539,7 +510,6 @@
     background: rgba(102, 126, 234, 0.12);
     border-radius: 8px;
     padding: 0.18em 0.7em;
-    font-family: inherit;
     box-shadow: 0 2px 8px 0 rgba(102, 126, 234, 0.04);
 }
 
@@ -548,22 +518,37 @@
     color: #c7d2fe;
     font-weight: 400;
     letter-spacing: 0.01em;
-    font-family: inherit;
 }
 
-@media (max-width: 768px) {
-    .brandTagline {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 0.3rem;
-        margin-bottom: 0.9rem;
-    }
-    .brandLogo {
-        font-size: 1rem;
-        padding: 0.15em 0.6em;
-    }
-    .tagline {
-        font-size: 0.95rem;
-    }
+/* Ensure font weights are applied as intended, overriding defaults if needed */
+/* This section at the end ensures these specific font weights are applied */
+.heroText h1, .finalCta h2, .featuresGrid h2 {
+    font-weight: 700 !important;
+}
+
+.heroText p, 
+.section h2, 
+.problemCard h3, 
+.featureCard h3, 
+.featureCard p, 
+.problemCard p, 
+.footer, 
+.footerLink, 
+.footerLeft, 
+.footerCenter, 
+.footerLinks, 
+.brandLogo, /* brandLogo also uses 700 above, this will be 400 */
+.tagline,
+.uiContent /* Added uiContent for consistent font weight */
+{
+    font-weight: 400 !important;
+}
+
+.ctaButton {
+    font-weight: 600 !important;
+}
+
+/* Explicitly set brandLogo to 700 if it was overridden */
+.brandLogo {
+    font-weight: 700 !important;
 } 

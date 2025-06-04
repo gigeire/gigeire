@@ -27,7 +27,7 @@ export default function MarketingPage() {
           <div className={styles.heroVisual} aria-label="Creative visual with floating UI">
             <Image
               src="/images/glowingbook_transparent.png"
-              alt="3D painter's palette and brush"
+              alt="Glowing book symbolizing creative ideas"
               width={240}
               height={240}
               style={{ objectFit: 'contain' }}
@@ -98,7 +98,7 @@ export default function MarketingPage() {
       {/* Features Section */}
       <section className={styles.features}>
         <div className={styles.featuresGrid}>
-          <h2 style={{ gridColumn: '1/-1', fontSize: '2.5rem', textAlign: 'center', marginBottom: '3rem', color: '#1f2937', fontWeight: 700 }}>
+          <h2 style={{ gridColumn: '1/-1', fontSize: '2.5rem', textAlign: 'center', marginBottom: '3rem', color: '#1f2937' }}>
             Everything You Need, Nothing You Don't
           </h2>
           <div className={styles.featureCard}>
@@ -131,13 +131,13 @@ export default function MarketingPage() {
       {/* Final CTA */}
       <section className={styles.finalCta}>
         <div className={styles.finalCtaContent}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 700, color: 'white', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '2.5rem', color: 'white', marginBottom: '2rem' }}>
             Ready to Get Your Life Back?
           </h2>
           <p style={{ fontSize: '1.2rem', marginBottom: '2rem', opacity: 0.9 }}>
             Join fellow creatives who've ditched the spreadsheets and reclaimed their creative energy.
           </p>
-          <Link href="/auth" className={styles.ctaButton} style={{ fontSize: '1.2rem', padding: '1.25rem 2.5rem' }}>
+          <Link href="/auth" className={styles.ctaButton}>
             Start Your Free Trial
           </Link>
         </div>
