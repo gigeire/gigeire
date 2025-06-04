@@ -172,7 +172,6 @@ export default function SettingsPage() {
               <>
                 <div>
                   <div className="flex items-center gap-2 mb-4 justify-center">
-                    {/* Premium Icon: Filled Crown */}
                     <Crown className="w-7 h-7 text-amber-500 fill-amber-400" strokeWidth={1} />
                     <h2 className="text-xl font-bold text-gray-800">Premium Plan</h2>
                   </div>
@@ -198,7 +197,6 @@ export default function SettingsPage() {
               <>
                 <div>
                   <div className="flex items-center gap-2 mb-4 justify-center">
-                    {/* Free Icon: Outline Crown */}
                     <Crown className="w-7 h-7 text-amber-600" strokeWidth={2} />
                     <h2 className="text-xl font-bold text-gray-800">Free Plan</h2>
                   </div>
@@ -216,8 +214,7 @@ export default function SettingsPage() {
                 </Button>
                 {stripeCheckoutError && <div className="text-red-600 text-sm mt-2 w-full">{stripeCheckoutError}</div>}
               </>
-            // Fallback: Error occurred or plan is undetermined
-            ) : ( 
+            ) : (
               <div className="py-4 h-full flex flex-col justify-center items-center">
                 <h2 className="text-xl font-bold text-gray-800 mb-2">Plan Information</h2>
                 {planFetchError ? (
@@ -238,7 +235,7 @@ export default function SettingsPage() {
                     variant="outline"
                     className="w-full px-4 py-2 text-blue-700 border-blue-200 hover:bg-blue-50 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-none text-sm"
                   >
-                     <Mail className="w-4 h-4 mr-2" /> Contact Support
+                    <Mail className="w-4 h-4 mr-2" /> Contact Support
                   </Button>
                 </a>
               </div>
@@ -307,7 +304,7 @@ export default function SettingsPage() {
           </section>
 
           <section className="bg-white rounded-2xl shadow p-6 md:p-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Account & Privacy</h2>
+            <h2 className="textxl font-bold text-gray-800 mb-6">Account & Privacy</h2>
             <div className="space-y-4">
               <Link
                 href="/privacy-policy"
@@ -350,6 +347,18 @@ export default function SettingsPage() {
           </section>
         </div>
       </div>
+      <footer className="mt-8 text-center text-gray-500 text-sm">
+        <div className="flex flex-col md:flex-row justify-center items-center gap-4">
+          <div className="text-sm">Made with <span role="img" aria-label="love">❤️</span> in Ireland</div>
+          <div className="text-sm">GigÉire</div>
+          <div className="flex gap-6">
+            <Link href="/privacy-policy" className="text-sm hover:text-gray-700">Privacy Policy</Link>
+            <Link href="/terms-of-service" className="text-sm hover:text-gray-700">Terms & Conditions</Link>
+            <a href="mailto:hello@gigeire.com" className="text-sm hover:text-gray-700">Contact</a>
+            <a href="https://instagram.com/gigeire" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-gray-700" aria-label="Instagram">📷</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 

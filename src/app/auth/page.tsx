@@ -50,6 +50,7 @@ export default function AuthPage() {
             console.error('Failed to insert user into users table:', insertError.message);
           }
         }
+        // After successful login/signup, always redirect to /dashboard (the app home)
         router.replace("/dashboard");
       } else {
         setError("Check your email for a confirmation link.");
