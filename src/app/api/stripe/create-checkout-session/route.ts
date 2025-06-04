@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 // Stripe import will be done dynamically inside the handler
 // import Stripe from "stripe"; 
