@@ -1,63 +1,65 @@
 "use client";
-export const dynamic = "force-dynamic";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
+
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function UpdatePasswordPage() {
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const supabase = createClientComponentClient();
+  const searchParams = useSearchParams();
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).catch((err) => {
+        console.error('Error exchanging code:', err);
+        setError('Invalid or expired link.');
+      });
+    } else {
+      setError('Invalid or missing code.');
+    }
+  }, [searchParams, supabase]);
+
+  const handleUpdatePassword = async () => {
     setLoading(true);
     setError(null);
-    try {
-      const supabase = createBrowserSupabaseClient();
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      setSuccess(true);
-      setTimeout(() => router.replace("/dashboard"), 1200);
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
-    } finally {
+
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) {
+      setError(error.message);
       setLoading(false);
+    } else {
+      setSuccess(true);
+      router.replace('/dashboard');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm mx-auto p-6 bg-white shadow rounded">
-        <h1 className="text-2xl font-bold mb-6 text-center">Set a new password</h1>
-        {success ? (
-          <div className="text-green-600 text-center font-medium">✅ Password updated successfully.</div>
-        ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-2 uppercase">New password</label>
-              <input
-                type="password"
-                className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-black"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-                minLength={6}
-              />
-            </div>
-            {error && <div className="text-sm text-red-600 text-center">{error}</div>}
-            <button
-              type="submit"
-              className="w-full bg-black text-white rounded-full py-2 font-semibold text-sm shadow hover:bg-gray-900 focus:ring-2 focus:ring-black focus:outline-none disabled:opacity-60 mt-2"
-              disabled={loading}
-            >
-              {loading ? "Updating..." : "Update password"}
-            </button>
-          </form>
-        )}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md bg-white p-6 rounded shadow">
+        <h1 className="text-xl font-semibold text-center mb-4">Set a new password</h1>
+        <input
+          type="password"
+          placeholder="New password"
+          className="w-full border rounded px-3 py-2 mb-4"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
+        <button
+          onClick={handleUpdatePassword}
+          disabled={loading || !password}
+          className="w-full bg-black text-white py-2 rounded hover:bg-gray-900 disabled:opacity-50"
+        >
+          {loading ? 'Updating...' : 'Update password'}
+        </button>
       </div>
     </div>
   );
