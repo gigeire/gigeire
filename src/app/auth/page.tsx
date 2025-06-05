@@ -123,6 +123,11 @@ export default function AuthPage() {
             </>
           )}
         </div>
+        <p className="text-xs text-center mt-2">
+          <a href="/reset-password" className="text-blue-500 hover:underline">
+            Forgot your password?
+          </a>
+        </p>
       </div>
     </div>
   );

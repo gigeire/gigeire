@@ -20,7 +20,6 @@ export default function UpdatePasswordPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       setSuccess(true);
-      // Optionally redirect after a short delay
       setTimeout(() => router.replace("/dashboard"), 1200);
     } catch (err: any) {
       setError(err.message || "Something went wrong");
