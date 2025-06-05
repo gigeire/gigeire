@@ -6,7 +6,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
-  const [recoveryToken, setRecoveryToken] = useState<string | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [feedback, setFeedback] = useState<{ error?: string; success?: boolean } | null>(null)
   const [loading, setLoading] = useState(false)
@@ -14,31 +14,44 @@ export default function UpdatePasswordPage() {
   // 1) Create a Supabase client in the browser
   const supabase = createClientComponentClient()
 
-  // 2) On mount, read "access_token" (the numeric code) from the URL
+  // 2) On mount, read "access_token" (the JWT) or error out if missing
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('access_token')
+    const errorDescription = params.get('error_description')
+
+    if (errorDescription) {
+      // Supabase returned an error—likely expired or invalid link
+      setFeedback({ error: `Failed to validate reset link: ${errorDescription}` })
+      return
+    }
 
     if (!token) {
+      // No token present—link was wrong or clicked manually
       setFeedback({ error: 'Invalid or missing access token. Please request a new reset link.' })
       return
     }
 
-    // That numeric code is our recoveryToken
-    setRecoveryToken(token)
-  }, [])
+    // We have a full JWT—set it on Supabase so updateUser() will work
+    supabase.auth
+      .setSession({ access_token: token, refresh_token: '' })
+      .then(({ error }) => {
+        if (error) {
+          setFeedback({ error: `Failed to set session: ${error.message}` })
+        } else {
+          setAccessToken(token)
+        }
+      })
+  }, [supabase])
 
-  // 3) When the form is submitted, call updateUser directly with the recoveryToken
+  // 3) When form is submitted, call updateUser({ password })
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setFeedback(null)
 
-    // Send the new password + recovery token to Supabase
-    const { error } = await supabase.auth.updateUser(
-      { password },
-      { accessToken: recoveryToken! } as any
-    )
+    // Now that the session is set above, this will succeed
+    const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
       setFeedback({ error: `Password update failed: ${error.message}` })
@@ -50,7 +63,7 @@ export default function UpdatePasswordPage() {
     setLoading(false)
   }
 
-  // 4) If there's already an error (e.g. no token), show it
+  // 4) If we already know there's an error (invalid/missing token), show it
   if (feedback?.error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -62,8 +75,8 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // 5) While we're waiting for the token to be parsed, show a loading state
-  if (!recoveryToken) {
+  // 5) While we're waiting for supabase.auth.setSession() to finish, show a loading state
+  if (!accessToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white p-6 rounded shadow max-w-sm w-full text-center">
@@ -73,7 +86,7 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // 6) We have a valid recoveryToken, so show the form
+  // 6) We have a valid accessToken (session is set)—render the password form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <form onSubmit={onSubmit} className="bg-white p-6 rounded shadow max-w-sm w-full">
