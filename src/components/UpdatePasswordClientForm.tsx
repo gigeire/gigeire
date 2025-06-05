@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { updatePasswordInDatabase } from '../app/update-password/page'; // Adjust path as needed based on actual file structure
+import { updatePasswordInDatabase } from '../app/update-password/actions';
 
 export default function UpdatePasswordClientForm() {
   const [password, setPassword] = useState('');
@@ -14,12 +14,15 @@ export default function UpdatePasswordClientForm() {
     e.preventDefault();
     setLoading(true);
     setFeedback(null);
+
+    // Call our server action, which runs on the server, passing the new password
     const result = await updatePasswordInDatabase(password);
     setFeedback(result);
     setLoading(false);
+
     if (result.success) {
-      // Redirect to dashboard and clear ?code= from URL
-      setTimeout(() => router.replace('/dashboard'), 1200);
+      // Immediately redirect to /dashboard on success
+      router.replace('/dashboard');
     }
   }
 
