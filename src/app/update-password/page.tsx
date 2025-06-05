@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs/server';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import UpdatePasswordClientForm from '@/components/UpdatePasswordClientForm';
 
 export const dynamic = 'force-dynamic';

@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs/server'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export async function updatePasswordInDatabase(
   password: string
