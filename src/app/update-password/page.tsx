@@ -6,51 +6,53 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
-  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [code, setCode] = useState<string | null>(null)
+  const [sessionReady, setSessionReady] = useState(false)
   const [password, setPassword] = useState('')
   const [feedback, setFeedback] = useState<{ error?: string; success?: boolean } | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // 1) Create a Supabase client in the browser
+  // 1) Create the Supabase client for the browser
   const supabase = createClientComponentClient()
 
-  // 2) On mount, read "access_token" (the JWT) or error out if missing
+  // 2) On mount, read “code” from the URL and verify it via verifyOtp
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const token = params.get('access_token')
+    const codeParam = params.get('code') // numeric OTP
     const errorDescription = params.get('error_description')
 
     if (errorDescription) {
-      // Supabase returned an error—likely expired or invalid link
+      // Supabase sent an error in the URL (e.g. expired link)
       setFeedback({ error: `Failed to validate reset link: ${errorDescription}` })
       return
     }
 
-    if (!token) {
-      // No token present—link was wrong or clicked manually
-      setFeedback({ error: 'Invalid or missing access token. Please request a new reset link.' })
+    if (!codeParam) {
+      // No “code” param at all
+      setFeedback({ error: 'Invalid or missing code. Please request a new reset link.' })
       return
     }
 
-    // We have a full JWT—set it on Supabase so updateUser() will work
+    // 2a) We have a numeric OTP—use verifyOtp to redeem it for a session
     supabase.auth
-      .setSession({ access_token: token, refresh_token: '' })
-      .then(({ error }) => {
-        if (error) {
-          setFeedback({ error: `Failed to set session: ${error.message}` })
+      .verifyOtp({ type: 'recovery', token: codeParam })
+      .then(({ data, error }) => {
+        if (error || !data.session) {
+          setFeedback({ error: `Failed to verify code: ${error?.message}` })
         } else {
-          setAccessToken(token)
+          // Session is now set in-memory; we can show the form
+          setCode(codeParam)
+          setSessionReady(true)
         }
       })
   }, [supabase])
 
-  // 3) When form is submitted, call updateUser({ password })
+  // 3) On form submit, call updateUser({ password })
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setFeedback(null)
 
-    // Now that the session is set above, this will succeed
     const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
@@ -63,7 +65,7 @@ export default function UpdatePasswordPage() {
     setLoading(false)
   }
 
-  // 4) If we already know there's an error (invalid/missing token), show it
+  // 4) If there’s already an error (either missing code or verifyOtp failed), show it
   if (feedback?.error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -75,8 +77,8 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // 5) While we're waiting for supabase.auth.setSession() to finish, show a loading state
-  if (!accessToken) {
+  // 5) While verifyOtp is in flight (sessionReady is false), show a “Loading…” state
+  if (!sessionReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white p-6 rounded shadow max-w-sm w-full text-center">
@@ -86,7 +88,7 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // 6) We have a valid accessToken (session is set)—render the password form
+  // 6) We have a valid session; render the password reset form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <form onSubmit={onSubmit} className="bg-white p-6 rounded shadow max-w-sm w-full">
@@ -114,4 +116,4 @@ export default function UpdatePasswordPage() {
       </form>
     </div>
   )
-} 
+}
