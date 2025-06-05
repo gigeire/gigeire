@@ -1,66 +1,70 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function UpdatePasswordPage() {
-  const supabase = createClientComponentClient();
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UpdatePasswordInner />
+    </Suspense>
+  );
+}
 
+function UpdatePasswordInner() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const code = searchParams.get('code');
+
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
-    const code = searchParams.get('code');
     if (code) {
-      supabase.auth.exchangeCodeForSession(code).catch((err) => {
-        console.error('Error exchanging code:', err);
-        setError('Invalid or expired link.');
+      supabase.auth.exchangeCodeForSession(code).catch(err => {
+        console.error('Code exchange failed:', err.message);
+        setError('Invalid or expired code.');
       });
-    } else {
-      setError('Invalid or missing code.');
     }
-  }, [searchParams, supabase]);
+  }, [code]);
 
-  const handleUpdatePassword = async () => {
-    setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password) return;
     setError(null);
 
-    const { error } = await supabase.auth.updateUser({ password });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
+    const { data, error: updateError } = await supabase.auth.updateUser({ password });
+    if (updateError) {
+      setError(updateError.message);
     } else {
       setSuccess(true);
-      router.replace('/dashboard');
+      setTimeout(() => window.location.href = '/dashboard', 1000);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white p-6 rounded shadow">
-        <h1 className="text-xl font-semibold text-center mb-4">Set a new password</h1>
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow max-w-sm w-full">
+        <h1 className="text-xl font-bold mb-4 text-center">Set a new password</h1>
         <input
           type="password"
           placeholder="New password"
-          className="w-full border rounded px-3 py-2 mb-4"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
+          required
+          className="w-full border border-gray-300 rounded p-2 mb-4"
         />
-        {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
+        {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+        {success && <p className="text-green-600 text-sm mb-2">Password updated! Redirecting...</p>}
         <button
-          onClick={handleUpdatePassword}
-          disabled={loading || !password}
-          className="w-full bg-black text-white py-2 rounded hover:bg-gray-900 disabled:opacity-50"
+          type="submit"
+          className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition"
         >
-          {loading ? 'Updating...' : 'Update password'}
+          Update password
         </button>
-      </div>
+      </form>
     </div>
   );
 } 
