@@ -1,11 +1,11 @@
+'use server'
+
 import { cookies } from 'next/headers'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export async function updatePasswordInDatabase(
   password: string
 ): Promise<{ error?: string; success?: boolean }> {
-  'use server'
-
   // 1) Grab the request-scoped cookies object
   const cookieStore = cookies()
   // 2) Create a Supabase client that will read/write cookies on the server
