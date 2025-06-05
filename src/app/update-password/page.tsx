@@ -1,62 +1,64 @@
 "use client";
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
 
-export default function UpdatePassword() {
-  const supabase = createClientComponentClient();
-  const router = useRouter();
+export default function UpdatePasswordPage() {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  useEffect(() => {
-    // Ensure session is recovered from magic link
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        setError("Auth session missing!");
-      }
-    });
-  }, []);
-
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     setError(null);
-    const { data, error } = await supabase.auth.updateUser({
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
+    try {
+      const supabase = createBrowserSupabaseClient();
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
       setSuccess(true);
-      setTimeout(() => {
-        router.replace("/dashboard");
-      }, 2000);
+      setTimeout(() => router.replace("/dashboard"), 1200);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <form onSubmit={handleUpdate} className="bg-white p-6 rounded shadow-md max-w-md w-full">
-        <h2 className="text-xl font-bold mb-4">Set a new password</h2>
-        <input
-          type="password"
-          placeholder="New password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="w-full p-2 border rounded mb-4"
-          required
-        />
-        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-        {success && <p className="text-green-600 text-sm mb-2">Password updated! Redirecting...</p>}
-        <button
-          type="submit"
-          className="w-full bg-black text-white p-2 rounded hover:bg-gray-800"
-        >
-          Update Password
-        </button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-sm mx-auto p-6 bg-white shadow rounded">
+        <h1 className="text-2xl font-bold mb-6 text-center">Set a new password</h1>
+        {success ? (
+          <div className="text-green-600 text-center font-medium">✅ Password updated successfully.</div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-2 uppercase">New password</label>
+              <input
+                type="password"
+                className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-black"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                minLength={6}
+              />
+            </div>
+            {error && <div className="text-sm text-red-600 text-center">{error}</div>}
+            <button
+              type="submit"
+              className="w-full bg-black text-white rounded-full py-2 font-semibold text-sm shadow hover:bg-gray-900 focus:ring-2 focus:ring-black focus:outline-none disabled:opacity-60 mt-2"
+              disabled={loading}
+            >
+              {loading ? "Updating..." : "Update password"}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 } 
