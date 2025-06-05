@@ -1,4 +1,3 @@
-// src/app/update-password/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -7,53 +6,57 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
-  const [code, setCode] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<{ error?: string; success?: boolean } | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [password, setPassword] = useState('')
+  const [feedback, setFeedback] = useState<{ error?: string; success?: boolean } | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // 1) Instantiate the Supabase client in the browser
+  // 1) Create a Supabase client in the browser
   const supabase = createClientComponentClient()
 
-  // 2) On mount, extract “code” from the URL & check for errors
+  // 2) On mount, parse “access_token” or “error_description” from the URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const codeParam = params.get('code')
+    const token = params.get('access_token')
     const errorDescription = params.get('error_description')
 
     if (errorDescription) {
-      // Supabase redirected with an error (e.g. expired link)
+      // Supabase appended an error (e.g. expired link)
       setFeedback({ error: `Failed to validate reset link: ${errorDescription}` })
       return
     }
 
-    if (!codeParam) {
-      // No code was provided
-      setFeedback({ error: 'Invalid or missing code. Please request a new reset link.' })
+    if (!token) {
+      // No token present—link was wrong or clicked manually
+      setFeedback({ error: 'Invalid or missing access token. Please request a new reset link.' })
       return
     }
 
-    // We have a valid “code” from Supabase’s email
-    setCode(codeParam)
-  }, [])
+    // We have a full JWT—set it in Supabase so updateUser() will work
+    supabase.auth
+      .setSession({ access_token: token, refresh_token: '' })
+      .then(({ error }) => {
+        if (error) {
+          setFeedback({ error: `Failed to set session: ${error.message}` })
+        } else {
+          setAccessToken(token)
+        }
+      })
+  }, [supabase])
 
-  // 3) When the form is submitted, call verifyOtp(...) with newPassword
+  // 3) On form submit, call updateUser({ password })
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setFeedback(null)
 
-    if (!code) {
-      setFeedback({ error: 'No code available. Please request a new reset link.' })
+    if (!accessToken) {
+      setFeedback({ error: 'No access token set. Please try again.' })
       setLoading(false)
       return
     }
 
-    const { error } = await supabase.auth.verifyOtp({
-      type: 'recovery',
-      token: code,
-      newPassword: password,
-    })
+    const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
       setFeedback({ error: `Password update failed: ${error.message}` })
@@ -65,7 +68,7 @@ export default function UpdatePasswordPage() {
     setLoading(false)
   }
 
-  // 4) If we already know there’s an error (no code or invalid link), show it
+  // 4) If an error already exists (invalid link, expired, etc.), show it
   if (feedback?.error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -77,45 +80,43 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // 5) If we have a “code” but no form yet, render the password form
-  if (code) {
+  // 5) While setSession() is pending (accessToken still null), show “Loading…”
+  if (!accessToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <form onSubmit={onSubmit} className="bg-white p-6 rounded shadow max-w-sm w-full">
-          <h1 className="text-xl font-bold mb-4 text-center">Set a new password</h1>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="New password"
-            required
-            minLength={6}
-            className="w-full border border-gray-300 rounded p-2 mb-4"
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition disabled:opacity-50"
-            disabled={loading || !password}
-          >
-            {loading ? 'Updating...' : 'Update Password'}
-          </button>
-          {feedback?.success && (
-            <p className="text-green-600 text-sm mb-2 text-center">
-              Password updated successfully.
-            </p>
-          )}
-        </form>
+        <div className="bg-white p-6 rounded shadow max-w-sm w-full text-center">
+          <p>Loading…</p>
+        </div>
       </div>
     )
   }
 
-  // 6) Otherwise (no code yet), show a generic loading state
+  // 6) accessToken is set—render the password form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white p-6 rounded shadow max-w-sm w-full text-center">
-        <p>Loading…</p>
-      </div>
+      <form onSubmit={onSubmit} className="bg-white p-6 rounded shadow max-w-sm w-full">
+        <h1 className="text-xl font-bold mb-4 text-center">Set a new password</h1>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="New password"
+          required
+          minLength={6}
+          className="w-full border border-gray-300 rounded p-2 mb-4"
+          disabled={loading}
+        />
+        <button
+          type="submit"
+          className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition disabled:opacity-50"
+          disabled={loading || !password}
+        >
+          {loading ? 'Updating...' : 'Update Password'}
+        </button>
+        {feedback?.success && (
+          <p className="text-green-600 text-sm mb-2 text-center">Password updated successfully.</p>
+        )}
+      </form>
     </div>
   )
 }
