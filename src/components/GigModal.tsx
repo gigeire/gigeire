@@ -14,7 +14,7 @@ interface GigModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "add" | "edit" | "clone";
-  onSubmit: (gig: Omit<Gig, "id" | "user_id" | "created_at">) => void;
+  onSubmit: (formData: Omit<Gig, "id" | "user_id" | "created_at">, mode: 'add' | 'edit' | 'clone') => void;
   gigToEdit?: Gig | null;
   gigToClone?: Gig | null;
   clients?: Client[];
@@ -153,12 +153,15 @@ export function GigModal({
     const newErrors: FormErrors = {};
     if (!values.title.trim()) newErrors.title = "Title is required";
     if (!currentClientInput.trim()) newErrors.client_id = "Client is required";
-    if (!values.date) newErrors.date = "Date is required";
-    else {
-      const selectedDate = new Date(values.date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) newErrors.date = "Date must be today or later";
+    if (!values.date) {
+      newErrors.date = "Date is required";
+    } else {
+      // To avoid timezone issues, compare date strings in YYYY-MM-DD format.
+      const today = new Date().toISOString().split('T')[0];
+      const inputDate = new Date(values.date).toISOString().split('T')[0];
+      if (inputDate < today) {
+          newErrors.date = "Date must be today or later";
+      }
     }
     if (typeof values.amount !== 'number' || isNaN(values.amount) || values.amount <= 0) newErrors.amount = "Amount must be a positive number";
     return newErrors;
@@ -307,7 +310,8 @@ export function GigModal({
     };
     delete (gigToSubmit as any).client_name; // clean up if it exists
 
-    await onSubmit(gigToSubmit as Omit<Gig, "id" | "user_id" | "created_at">);
+    // Pass the prepared form data and mode to the parent component
+    onSubmit(gigToSubmit as Omit<Gig, "id" | "user_id" | "created_at">, mode);
 
     setForm({ title: "", date: "", client: "", client_id: "", amount: 0, location: "", status: "inquiry", user_id: "", created_at: "", invoice: undefined });
     setClientInput("");

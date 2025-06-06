@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { Users, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { GigModal } from "@/components/GigModal";
 import { useToast } from "@/hooks/use-toast";
+import { ensureUserExists } from '@/app/actions/user';
 
 function slugify(name: string) {
   return encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'));
@@ -171,7 +172,16 @@ export default function ClientsPage() {
     }
   };
 
-  const handleAddGig = async (form: Omit<Gig, "id">) => {
+  const handleAddGig = async (form: Omit<Gig, "id" | "user_id" | "created_at">, mode: 'add' | 'edit' | 'clone') => {
+    // Defensive check to ensure user record exists before creating a gig.
+    const userCheck = await ensureUserExists();
+    if (userCheck.error) {
+      console.error("Critical action failed: Could not ensure user exists.", userCheck.error.message);
+      toast({ title: "Account Error", description: "Your account record could not be verified. Please refresh and try again.", variant: "destructive" });
+      return;
+    }
+    
+    // This modal is only for adding, so we ignore the mode, but it's required by the prop type
     const newGig = await addGig(form);
     if (newGig) {
       toast({
@@ -264,6 +274,8 @@ export default function ClientsPage() {
           onOpenChange={setGigModalOpen}
           mode="add"
           onSubmit={handleAddGig}
+          clients={clientsFromContext || []}
+          selectedClientId={clientDirectoryEntries.find(c => c.gigs.length > 0)?.id}
         />
       </div>
     );

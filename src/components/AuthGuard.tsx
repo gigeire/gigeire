@@ -1,32 +1,17 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
+import { ensureUserExists } from '@/app/actions/user';
 
-export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const supabase = createClientComponentClient();
+export default async function AuthGuard({ children }: { children: React.ReactNode }) {
+  const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  useEffect(() => {
-    let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session && mounted) {
-        router.replace("/auth");
-      } else if (mounted) {
-        setLoading(false);
-      }
-    });
-    return () => { mounted = false; };
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    );
+  if (!session) {
+    redirect('/auth');
   }
+
+  // Ensure a user record exists in the public table.
+  await ensureUserExists();
 
   return <>{children}</>;
 } 

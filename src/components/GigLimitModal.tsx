@@ -8,9 +8,10 @@ interface GigLimitModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   limit: number;
+  currentCount: number;
 }
 
-export function GigLimitModal({ open, onOpenChange, limit }: GigLimitModalProps) {
+export function GigLimitModal({ open, onOpenChange, limit, currentCount }: GigLimitModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

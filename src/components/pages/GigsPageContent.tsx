@@ -15,6 +15,8 @@ import { statusColors } from "@/constants/ui";
 import { GigModal } from "@/components/GigModal";
 import { useToast } from "@/hooks/use-toast";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { ensureUserExists } from '@/app/actions/user';
+import { GigLimitModal } from "@/components/GigLimitModal";
 
 type SortField = 'name' | 'client' | 'date' | 'amount' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -84,7 +86,7 @@ function getStatusKey(gig: Gig): string {
 }
 
 function GigsPageContent() {
-  const { gigs, updateGig } = useGigs();
+  const { gigs, addGig, updateGig } = useGigs();
   const { clients, refetch: refetchClients } = useClients();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -106,30 +108,93 @@ function GigsPageContent() {
 
   const [gigModalOpen, setGigModalOpen] = useState(false);
   const [gigToEdit, setGigToEdit] = useState<Gig | null>(null);
+  const [gigToClone, setGigToClone] = useState<Gig | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [gigLimitModalOpen, setGigLimitModalOpen] = useState(false);
+  const [gigLimitData, setGigLimitData] = useState({ currentCount: 0, limit: 10 });
+
+  const checkGigLimit = async () => {
+    // This logic should ideally be in a context or a server action for reusability
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { canAddGig: false, currentCount: 0, limit: 0 };
+
+    const { data: profile } = await supabase.from('users').select('plan').eq('id', user.id).single();
+    const { data: gigs, error } = await supabase.from('gigs').select('id', { count: 'exact' });
+    
+    const currentCount = gigs?.length ?? 0;
+    const limit = profile?.plan === 'premium' ? 1000 : 10;
+    
+    return { canAddGig: currentCount < limit, currentCount, limit };
+  };
+
+  const handleAddGigClick = async () => {
+    const limitCheck = await checkGigLimit();
+    if (limitCheck.canAddGig) {
+      setGigToEdit(null);
+      setGigToClone(null);
+      setGigModalOpen(true);
+    } else {
+      setGigLimitData({ currentCount: limitCheck.currentCount, limit: limitCheck.limit });
+      setGigLimitModalOpen(true);
+    }
+  };
+
+  const handleCloneGig = async (gig: Gig) => {
+    const limitCheck = await checkGigLimit();
+    if (limitCheck.canAddGig) {
+      setGigToEdit(null);
+      setGigToClone(gig);
+      setGigModalOpen(true);
+    } else {
+      setGigLimitData({ currentCount: limitCheck.currentCount, limit: limitCheck.limit });
+      setGigLimitModalOpen(true);
+    }
+  };
 
   const handleGigModalOpenChange = (open: boolean) => {
     setGigModalOpen(open);
     if (!open) {
       setGigToEdit(null);
+      setGigToClone(null);
     }
   };
 
   const handleEditGigClick = (gig: Gig) => {
     setGigToEdit(gig);
+    setGigToClone(null);
     setGigModalOpen(true);
   };
 
-  const handleGigFormSubmit = async (formData: Omit<Gig, "id" | "user_id" | "created_at">) => {
-    if (gigToEdit) {
+  const handleGigSubmit = async (formData: Omit<Gig, "id" | "user_id" | "created_at">, mode: 'add' | 'edit' | 'clone') => {
+    setLoading(true);
+    // Defensive check to ensure user record exists before any action.
+    const userCheck = await ensureUserExists();
+    if (userCheck.error) {
+      console.error("Critical action failed: Could not ensure user exists.", userCheck.error.message);
+      toast({ title: "Account Error", description: "Your account record could not be verified. Please refresh and try again.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    if (mode === 'edit' && gigToEdit) {
       const updatedGig = await updateGig(gigToEdit.id, formData);
       if (updatedGig) {
         toast({ title: "Success", description: "Gig updated successfully." });
         setGigModalOpen(false);
-        await refetchClients();
       } else {
         toast({ title: "Error", description: "Failed to update gig.", variant: "destructive" });
       }
+    } else if (mode === 'add' || mode === 'clone') {
+      const newGig = await addGig(formData);
+      if (newGig) {
+        toast({ title: "Success", description: `Gig "${newGig.title}" created.` });
+        setGigModalOpen(false);
+      } else {
+        toast({ title: "Error", description: "Failed to create gig.", variant: "destructive" });
+      }
     }
+    await refetchClients();
+    setLoading(false);
   };
 
   const filteredGigs = useMemo(() => {
@@ -229,7 +294,11 @@ function GigsPageContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 text-center">All Gigs</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Gigs</h1>
+          <Button onClick={handleAddGigClick}>Add Gig</Button>
+        </div>
+
         <MainNav />
         
         <div className="mt-8 mb-8">
@@ -430,9 +499,17 @@ function GigsPageContent() {
       <GigModal
         open={gigModalOpen}
         onOpenChange={handleGigModalOpenChange}
-        mode="edit"
-        onSubmit={handleGigFormSubmit}
+        mode={gigToEdit ? 'edit' : (gigToClone ? 'clone' : 'add')}
+        onSubmit={handleGigSubmit}
         gigToEdit={gigToEdit}
+        gigToClone={gigToClone}
+        clients={clients}
+      />
+      <GigLimitModal
+        open={gigLimitModalOpen}
+        onOpenChange={setGigLimitModalOpen}
+        limit={gigLimitData.limit}
+        currentCount={gigLimitData.currentCount}
       />
     </div>
   );
