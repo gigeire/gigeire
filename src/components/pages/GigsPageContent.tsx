@@ -295,8 +295,7 @@ function GigsPageContent() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Gigs</h1>
-          <Button onClick={handleAddGigClick}>Add Gig</Button>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">All Gigs</h1>
         </div>
 
         <MainNav />
