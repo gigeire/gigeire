@@ -16,7 +16,7 @@ export default function MarketingPage() {
           <div className={styles.heroText}>
             <div className={styles.brandTagline}>
               <span className={styles.brandLogo}>GigÉire</span>
-              <span className={styles.tagline}>The Irish Creative's App</span>
+              <span className={styles.tagline}>The Irish Creatives' App</span>
             </div>
             <h1>Built for Creators Who Actually Want to Create</h1>
             <p>The business app that actually gets creatives. Manage gigs, clients, and payments without killing your creative buzz.</p>
