@@ -589,7 +589,7 @@ export default function AnalyticsPage() {
                           <EmptyState 
                             icon={<BarChart2 className="w-10 h-10 text-gray-400"/>} 
                             title="No earnings data" 
-                            subtitle="No paid gigs found for the selected year."
+                            subtitle={earningsYear === 'thisYear' ? `Looks like ${currentYear} took a coffee break ☕` : `Looks like ${lastYear} took a coffee break ☕`}
                           />
                         )}
                       </CardContent>
