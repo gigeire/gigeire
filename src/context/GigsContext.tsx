@@ -114,7 +114,7 @@ export function GigsProvider({ children }: { children: ReactNode }) {
       const transformedGigs = data ? data.map(gig => ({
         ...gig,
         client: (gig as unknown as GigWithClient).clients?.name || 'Unknown Client',
-        invoice: (gig as any).invoice?.[0] || null // Take the first invoice if it exists
+        invoice: (gig as any).invoice || null // Direct assignment of single invoice object
       })) : [];
       setGigs(transformedGigs as Gig[] || []);
     } catch (err) {
