@@ -191,7 +191,9 @@ function GigsPageContent() {
           case 'paid':
             return gig.status === 'paid';
           case 'overdue':
-            return isOverdue(gig);
+            const overdue = isOverdue(gig);
+            console.log('Overdue Filtering:', gig.id, overdue);
+            return overdue;
           default:
             return true;
         }
