@@ -8,16 +8,15 @@ import { Gig } from "@/types";
  * - The gig is not marked as paid
  */
 export function isOverdue(gig: Gig): boolean {
-  if (gig.status === 'paid' || !gig.invoice?.dueDate) {
-    return false;
-  }
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize today to the beginning of the day
+  if (!gig.invoice || gig.invoice.status !== "sent" || !gig.invoice.due_date) return false;
 
-  const dueDate = new Date(gig.invoice.dueDate);
-  dueDate.setHours(0, 0, 0, 0); // Normalize due date to the beginning of the day
+  const dueDate = new Date(gig.invoice.due_date);
+  const now = new Date();
 
-  return dueDate < today;
+  const dueUTC = Date.UTC(dueDate.getUTCFullYear(), dueDate.getUTCMonth(), dueDate.getUTCDate());
+  const nowUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+
+  return dueUTC < nowUTC;
 }
 
 /**
