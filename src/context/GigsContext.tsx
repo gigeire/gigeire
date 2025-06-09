@@ -90,6 +90,15 @@ export function GigsProvider({ children }: { children: ReactNode }) {
           created_at,
           clients (
             name
+          ),
+          invoice:invoices (
+            id,
+            status,
+            due_date,
+            amount,
+            invoice_number,
+            invoice_sent_at,
+            invoice_paid_at
           )
         `)
         .eq("user_id", userId)
@@ -99,7 +108,8 @@ export function GigsProvider({ children }: { children: ReactNode }) {
       
       const transformedGigs = data ? data.map(gig => ({
         ...gig,
-        client: (gig as unknown as GigWithClient).clients?.name || 'Unknown Client' 
+        client: (gig as unknown as GigWithClient).clients?.name || 'Unknown Client',
+        invoice: (gig as any).invoice?.[0] || null // Take the first invoice if it exists
       })) : [];
       setGigs(transformedGigs as Gig[] || []);
     } catch (err) {
