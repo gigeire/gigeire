@@ -11,6 +11,7 @@ export default function AuthForm() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,20 +21,21 @@ export default function AuthForm() {
     setMessage(null);
     setLoading(true);
     try {
-      let result;
       if (mode === "signup") {
-        result = await supabase.auth.signUp({ 
+        const { error } = await supabase.auth.signUp({ 
           email, 
           password,
           options: {
-            emailRedirectTo: `${location.origin}/auth/callback`
+            emailRedirectTo: `${location.origin}/auth`
           }
         });
-        if (result.error) throw result.error;
+        if (error) throw error;
         setMessage("Check your email for a confirmation link.");
+        setResendCooldown(true);
+        setTimeout(() => setResendCooldown(false), 3000);
       } else {
-        result = await supabase.auth.signInWithPassword({ email, password });
-        if (result.error) throw result.error;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
         router.replace("/dashboard");
       }
     } catch (err: any) {
@@ -41,6 +43,16 @@ export default function AuthForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const buttonText = () => {
+    if (loading) {
+      return mode === "login" ? "Logging in..." : "Signing up...";
+    }
+    if (message && mode === "signup") {
+      return "Resend Email";
+    }
+    return mode === "login" ? "Login" : "Sign Up";
   };
 
   return (
@@ -78,9 +90,9 @@ export default function AuthForm() {
           <button
             type="submit"
             className="w-full bg-blue-600 text-white rounded-lg py-3 font-semibold text-base shadow-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:opacity-50 transition-all transform hover:scale-105"
-            disabled={loading}
+            disabled={loading || (mode === 'signup' && resendCooldown)}
           >
-            {loading ? (mode === "login" ? "Logging in..." : "Signing up...") : (mode === "login" ? "Login" : "Sign Up")}
+            {buttonText()}
           </button>
         </form>
         <div className="mt-6 text-center text-sm text-gray-600">
