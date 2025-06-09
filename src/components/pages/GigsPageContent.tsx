@@ -66,6 +66,27 @@ const EMPTY_STATE_MESSAGES = {
 
 function GigsPageContent() {
   const { gigs, addGig, updateGig } = useGigs();
+
+  // === OVERDUE DIAGNOSIS LOGGING ===
+  useEffect(() => {
+    if (!gigs || gigs.length === 0) return;
+
+    console.log('=== OVERDUE DIAGNOSIS ===');
+    console.log('Total gigs:', gigs.length);
+    console.log('Sample gig structure:', gigs[0]);
+    console.log('Gigs with invoice or invoices:', gigs.filter(g => g.invoice || g.invoices).length);
+    console.log('Sample invoice object:', gigs.find(g => g.invoice || g.invoices));
+
+    const testResults = gigs.slice(0, 5).map(gig => ({
+      gig_id: gig.id,
+      invoice_exists: !!gig.invoice || !!gig.invoices,
+      invoice_status: gig.invoice?.status || gig.invoices?.[0]?.status,
+      due_date: gig.invoice?.dueDate || gig.invoice?.due_date || gig.invoices?.[0]?.due_date,
+      isOverdue: isOverdue(gig),
+    }));
+    console.log('Overdue test results:', testResults);
+  }, [gigs]);
+
   const { clients, refetch: refetchClients } = useClients();
   const searchParams = useSearchParams();
   const router = useRouter();
