@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { ensureUserExists } from '@/app/actions/user';
 import { GigLimitModal } from "@/components/GigLimitModal";
+import { isOverdue, getDisplayStatus, getStatusKey } from "@/utils/gigs";
 
 type SortField = 'name' | 'client' | 'date' | 'amount' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -62,35 +63,6 @@ const EMPTY_STATE_MESSAGES = {
     subtitle: "There are no gigs for this filter."
   }
 };
-
-function isOverdue(gig: Gig): boolean {
-  if (gig.status === 'paid' || !gig.invoice?.dueDate) {
-    return false;
-  }
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize today to the beginning of the day
-
-  const dueDate = new Date(gig.invoice.dueDate);
-  dueDate.setHours(0, 0, 0, 0); // Normalize due date to the beginning of the day
-
-  return dueDate < today;
-}
-
-function getDisplayStatus(gig: Gig): string {
-  if (isOverdue(gig)) return "Overdue";
-  switch (gig.status) {
-    case "inquiry": return "Inquiry";
-    case "confirmed": return "Confirmed";
-    case "invoice_sent": return "Invoice Sent";
-    case "paid": return "Paid";
-    default: return gig.status;
-  }
-}
-
-function getStatusKey(gig: Gig): string {
-  if (isOverdue(gig)) return "overdue";
-  return gig.status;
-}
 
 function GigsPageContent() {
   const { gigs, addGig, updateGig } = useGigs();

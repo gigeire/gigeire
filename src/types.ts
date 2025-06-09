@@ -2,8 +2,7 @@ export type GigStatus =
   | "inquiry"
   | "confirmed"
   | "invoice_sent"
-  | "paid"
-  | "overdue";
+  | "paid";
 
 export interface Invoice {
   invoiceNumber: number;
