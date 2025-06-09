@@ -187,6 +187,15 @@ export default function AnalyticsPage() {
       }
     });
 
+    // Calculate totalInvoiced based on gig statuses to reflect user's intended behavior
+    // This ensures that marking a gig as "invoice_sent" affects the pipeline display even if an invoice wasn't generated
+    totalInvoiced = gigs.reduce((sum: number, gig: Gig) => {
+      if (gig.status === "invoice_sent" || gig.status === "overdue" || gig.status === "paid") {
+        return sum + (gig.amount || 0);
+      }
+      return sum;
+    }, 0);
+
     // Filter gigs for booking funnel based on selected year
     const targetFunnelYear = funnelYear === 'thisYear' ? currentYear : lastYear;
     const filteredGigsForFunnel = gigs.filter(gig => {
@@ -232,11 +241,7 @@ export default function AnalyticsPage() {
     });
 
     // Process invoice data for invoiced amount only
-    invoices.forEach(invoice => {
-      if (invoice.total) {
-        totalInvoiced += invoice.total;
-      }
-    });
+    // Removed: invoices.forEach(invoice => { if (invoice.total) { totalInvoiced += invoice.total; } });
 
     // Top clients calculation
     const clientDataMap: Record<string, { client: Client; gigs: Gig[]; invoices: Invoice[] }> = {};
