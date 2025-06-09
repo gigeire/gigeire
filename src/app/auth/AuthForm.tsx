@@ -9,6 +9,7 @@ export default function AuthForm() {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -16,22 +17,24 @@ export default function AuthForm() {
     e.preventDefault();
     const supabase = createClientComponentClient();
     setError(null);
+    setMessage(null);
     setLoading(true);
     try {
       let result;
       if (mode === "signup") {
-        result = await supabase.auth.signUp({ email, password });
+        result = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: {
+            emailRedirectTo: `${location.origin}/auth/callback`
+          }
+        });
         if (result.error) throw result.error;
+        setMessage("Check your email for a confirmation link.");
       } else {
         result = await supabase.auth.signInWithPassword({ email, password });
         if (result.error) throw result.error;
-      }
-      
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
         router.replace("/dashboard");
-      } else {
-        setError("Check your email for a confirmation link.");
       }
     } catch (err: any) {
       setError(err.message || "Authentication failed");
@@ -41,68 +44,72 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-start justify-start bg-gray-50 pt-16 sm:pt-20">
-      <div className="w-full max-w-xs mx-auto flex flex-col">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center" style={{ fontSize: '20px' }}>{mode === "login" ? "Login to GigÉire" : "Sign Up for GigÉire"}</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-2 uppercase">Email</label>
-            <input
-              type="email"
-              className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-black"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-2 uppercase">Password</label>
-            <input
-              type="password"
-              className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-black"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-            />
-          </div>
-          {error && <div className="text-sm text-red-600 text-center">{error}</div>}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-sm mx-auto flex flex-col items-center">
+        <h1 className="text-3xl font-bold mb-2 text-gray-800">
+          {mode === "login" ? "Welcome Back" : "Create an Account"}
+        </h1>
+        <p className="text-gray-600 mb-8">
+          {mode === "login" ? "Login to manage your gigs." : "Get started with GigÉire today."}
+        </p>
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+          <input
+            type="email"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+          <input
+            type="password"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+          />
+          
+          {error && <div className="text-sm text-red-600 bg-red-100 p-3 rounded-lg text-center">{error}</div>}
+          {message && <div className="text-sm text-green-700 bg-green-100 p-3 rounded-lg text-center">{message}</div>}
+
           <button
             type="submit"
-            className="w-full bg-black text-white rounded-full py-2 font-semibold text-sm shadow hover:bg-gray-900 focus:ring-2 focus:ring-black focus:outline-none disabled:opacity-60 mt-2"
+            className="w-full bg-blue-600 text-white rounded-lg py-3 font-semibold text-base shadow-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:opacity-50 transition-all transform hover:scale-105"
             disabled={loading}
           >
             {loading ? (mode === "login" ? "Logging in..." : "Signing up...") : (mode === "login" ? "Login" : "Sign Up")}
           </button>
         </form>
-        <div className="mt-8 text-center text-xs text-gray-500">
+        <div className="mt-6 text-center text-sm text-gray-600">
           {mode === "login" ? (
             <>
               Need an account?{' '}
               <button
-                className="text-blue-600 underline hover:opacity-80"
-                onClick={() => setMode("signup")}
+                className="font-semibold text-blue-600 hover:underline"
+                onClick={() => { setMode("signup"); setError(null); setMessage(null); }}
                 type="button"
               >
-                Sign up here.
+                Sign up
               </button>
             </>
           ) : (
             <>
               Already have an account?{' '}
               <button
-                className="text-blue-600 underline hover:opacity-80"
-                onClick={() => setMode("login")}
+                className="font-semibold text-blue-600 hover:underline"
+                onClick={() => { setMode("login"); setError(null); setMessage(null); }}
                 type="button"
               >
-                Log in here.
+                Log in
               </button>
             </>
           )}
         </div>
-        <p className="text-xs text-center mt-2">
-          <a href="/reset-password" className="text-blue-500 hover:underline">
+        <p className="text-sm text-center mt-4">
+          <a href="/reset-password" className="text-gray-500 hover:text-blue-600 hover:underline">
             Forgot your password?
           </a>
         </p>
