@@ -16,13 +16,13 @@ function isOverdue(gig: Gig): boolean {
   if (gig.status === 'paid' || !gig.invoice?.dueDate) {
     return false;
   }
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize today to the beginning of the day
-
+  // Parse due date as UTC
   const dueDate = new Date(gig.invoice.dueDate);
-  dueDate.setHours(0, 0, 0, 0); // Normalize due date to the beginning of the day
-
-  return dueDate < today;
+  const dueUTC = Date.UTC(dueDate.getUTCFullYear(), dueDate.getUTCMonth(), dueDate.getUTCDate());
+  // Get today in UTC
+  const now = new Date();
+  const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return dueUTC < todayUTC;
 }
 
 const formatEuro = (value: number) => 
