@@ -26,7 +26,7 @@ export default function AuthForm() {
           email, 
           password,
           options: {
-            emailRedirectTo: `${location.origin}/auth`
+            emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth`
           }
         });
         if (error) throw error;
@@ -89,7 +89,7 @@ export default function AuthForm() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white rounded-lg py-3 font-semibold text-base shadow-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:opacity-50 transition-all transform hover:scale-105"
+            className="w-full bg-black text-white rounded-lg py-3 font-semibold text-base shadow-md hover:bg-gray-900 focus:ring-4 focus:ring-black focus:outline-none disabled:opacity-50 transition-all transform hover:scale-105"
             disabled={loading || (mode === 'signup' && resendCooldown)}
           >
             {buttonText()}
