@@ -91,14 +91,19 @@ export function GigsProvider({ children }: { children: ReactNode }) {
           clients (
             name
           ),
-          invoice:invoices (
+          invoice:invoices!gig_id (
             id,
             status,
             due_date,
             amount,
             invoice_number,
             invoice_sent_at,
-            invoice_paid_at
+            invoice_paid_at,
+            subtotal,
+            vat_amount,
+            total,
+            include_vat,
+            vat_rate
           )
         `)
         .eq("user_id", userId)

@@ -5,14 +5,18 @@ export type GigStatus =
   | "paid";
 
 export interface Invoice {
-  invoiceNumber: number;
-  dueDate: string; // ISO string (YYYY-MM-DD)
-  vatIncluded: boolean;
+  id: string;
+  status: 'sent' | 'paid' | 'overdue';
+  due_date: string; // ISO string (YYYY-MM-DD)
+  amount: number;
+  invoice_number: string;
+  invoice_sent_at?: string | null;
+  invoice_paid_at?: string | null;
   subtotal: number;
-  vatAmount: number;
+  vat_amount: number;
   total: number;
-  number: string;
-  invoice_sent_at?: string; // ISO string timestamp, optional
+  include_vat: boolean;
+  vat_rate: number;
 }
 
 // Renamed from Invoice in InvoicesContext.tsx
