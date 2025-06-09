@@ -111,11 +111,16 @@ export function GigsProvider({ children }: { children: ReactNode }) {
 
       if (fetchError) throw fetchError;
       
-      const transformedGigs = data ? data.map(gig => ({
-        ...gig,
-        client: (gig as unknown as GigWithClient).clients?.name || 'Unknown Client',
-        invoice: (gig as any).invoice || null // Direct assignment of single invoice object
-      })) : [];
+      const transformedGigs = data ? data.map(gig => {
+        console.log("INVOICE SHAPE", gig.id, typeof gig.invoice, Array.isArray(gig.invoice), gig.invoice);
+        return {
+          ...gig,
+          client: (gig as unknown as GigWithClient).clients?.name || 'Unknown Client',
+          invoice: Array.isArray(gig.invoice)
+            ? gig.invoice?.[0] || null
+            : gig.invoice || null
+        };
+      }) : [];
       setGigs(transformedGigs as Gig[] || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch gigs");
