@@ -13,13 +13,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 function isOverdue(gig: Gig): boolean {
-  if (gig.status === 'paid' || !gig.invoice?.dueDate) {
-    return false;
-  }
-  // Parse due date as UTC
-  const dueDate = new Date(gig.invoice.dueDate);
+  // Accept both camelCase and snake_case for dueDate, and check for status in invoice or gig
+  const invoice = gig.invoice;
+  const dueDateStr = invoice?.dueDate || (invoice && (invoice as any).due_date);
+  const invoiceStatus = invoice && ((invoice as any).status || gig.status);
+  if (!invoice || invoiceStatus !== "sent" || !dueDateStr) return false;
+  const dueDate = new Date(dueDateStr);
   const dueUTC = Date.UTC(dueDate.getUTCFullYear(), dueDate.getUTCMonth(), dueDate.getUTCDate());
-  // Get today in UTC
   const now = new Date();
   const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   return dueUTC < todayUTC;
