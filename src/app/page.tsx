@@ -21,7 +21,7 @@ export default function MarketingPage() {
             <h1>Built for Creators Who Actually Want to Create</h1>
             <p>The business app that actually gets creatives. Manage gigs, clients, and payments without killing your creative buzz.</p>
             <Link href="/auth" className={styles.ctaButton}>
-              Start Creating, Not Managing
+              Start Creating, Not Managing — Sign Up Free
             </Link>
           </div>
           <div className={styles.heroVisual} aria-label="Creative visual with floating UI">
