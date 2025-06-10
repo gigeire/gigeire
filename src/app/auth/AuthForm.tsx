@@ -24,6 +24,8 @@ export default function AuthForm() {
       if (mode === "signup") {
         const redirectPath = window.location.pathname;
         const redirectUrl = `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectPath)}`;
+        
+        console.log("Redirecting to:", redirectUrl);  // Debug log to verify redirect URL
 
         const { error } = await supabase.auth.signUp({ 
           email, 
