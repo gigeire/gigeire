@@ -21,7 +21,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "GigÉire - Skip the spreadsheets. Skip the headaches.",
-  description: "The app that makes freelance admin disappear. Designed for Irish creatives who'd rather shoot, mix or edit than chase invoices.",
+  description:
+    "The app that makes freelance admin disappear. Designed for Irish creatives who'd rather shoot, mix or edit than chase invoices.",
 };
 
 export default function RootLayout({
@@ -31,6 +32,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          defer
+          data-domain="gigeire.com"
+          src="https://plausible.io/js/script.js"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -41,13 +49,13 @@ export default function RootLayout({
                 <GigsProvider>
                   <AnalyticsProvider>
                     {children}
+                    <Toaster />
                   </AnalyticsProvider>
                 </GigsProvider>
               </ClientDocumentsProvider>
             </InvoicesProvider>
           </ClientsProvider>
         </SenderInfoProvider>
-        <Toaster />
       </body>
     </html>
   );
