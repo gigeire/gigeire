@@ -22,11 +22,23 @@ export default function AuthForm() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        // Get base site URL from env
+        const baseRedirect = process.env.NEXT_PUBLIC_SITE_URL + '/auth/callback'
+
+        // Get the page the user is currently on (e.g. '/auth')
+        const redirectTo = window.location.pathname
+
+        // Construct full redirect URL with encoded target
+        const redirectUrl = `${baseRedirect}?redirectTo=${encodeURIComponent(redirectTo)}`
+
+        // TEMP: Log this in dev for verification
+        console.log("📫 emailRedirectTo:", redirectUrl)
+
         const { error } = await supabase.auth.signUp({ 
           email, 
           password,
           options: {
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth`
+            emailRedirectTo: redirectUrl
           }
         });
         if (error) throw error;
