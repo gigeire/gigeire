@@ -22,11 +22,14 @@ export default function AuthForm() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const redirectPath = window.location.pathname;
+        const redirectUrl = `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectPath)}`;
+
         const { error } = await supabase.auth.signUp({ 
           email, 
           password,
           options: {
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth`
+            emailRedirectTo: redirectUrl
           }
         });
         if (error) throw error;
