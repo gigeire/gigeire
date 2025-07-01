@@ -91,16 +91,68 @@ export default function ClientDetailPage() {
   const { toast } = useToast();
   const supabase = createClientComponentClient();
 
-  // Get client name from URL and find the matching client from context
+  // Get client name from URL and find the matching client from context AND database
   const clientNameFromUrl = useMemo(() => {
     const name = params.clientName as string;
     return name ? capitalizeIrishName(unslugify(name)) : '';
   }, [params.clientName]);
   
-  const client = useMemo(() => {
-    if (!clientNameFromUrl || !clients) return null;
-    return clients.find(c => c.name.toLowerCase() === clientNameFromUrl.toLowerCase()) || null;
-  }, [clients, clientNameFromUrl]);
+  const [client, setClient] = useState<Client | null>(null);
+  const [clientLoading, setClientLoading] = useState(true);
+
+  // Fetch client from database directly (more reliable than context)
+  useEffect(() => {
+    if (!clientNameFromUrl) {
+      setClient(null);
+      setClientLoading(false);
+      return;
+    }
+
+    const fetchClient = async () => {
+      setClientLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setClient(null);
+          setClientLoading(false);
+          return;
+        }
+
+        // Try case-insensitive lookup from database
+        const { data, error } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('user_id', user.id)
+          .ilike('name', clientNameFromUrl) // Case-insensitive match
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          console.error('Error fetching client:', error);
+          throw error;
+        }
+
+        if (data) {
+          setClient(data);
+        } else {
+          // Fallback: try context lookup if database didn't find anything
+          const contextClient = clients?.find(c => c.name.toLowerCase() === clientNameFromUrl.toLowerCase()) || null;
+          setClient(contextClient);
+        }
+      } catch (error: any) {
+        console.error('Failed to fetch client:', error);
+        toast({ 
+          title: "Error", 
+          description: `Failed to load client: ${error.message}`, 
+          variant: "destructive" 
+        });
+        setClient(null);
+      } finally {
+        setClientLoading(false);
+      }
+    };
+
+    fetchClient();
+  }, [clientNameFromUrl, supabase, clients, toast]);
 
   // Filter gigs for the current client
   const clientGigs = useMemo(() => {
@@ -509,7 +561,7 @@ export default function ClientDetailPage() {
 
   const isMobile = useMediaQuery("(max-width: 640px)"); // sm breakpoint
 
-  if (clientsLoading && !client) {
+  if (clientLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 p-4 md:p-8 flex flex-col items-center justify-center">
         <MainNav />
