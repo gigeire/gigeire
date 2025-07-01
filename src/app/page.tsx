@@ -20,7 +20,7 @@ export default function MarketingPage() {
               <span className={styles.tagline}>The Irish Creatives' App</span>
             </div>
             <h1>Stop Losing Track. Start Getting Paid On Time.</h1>
-            <p>GigÉire keeps your gigs, payments, and clients in one clean, mobile-friendly space — manage your business without killing your creative buzz.</p>
+            <p>GigÉire keeps your gigs, payments, and clients in one clean, mobile-friendly space. Manage your business without killing your creative buzz.</p>
             <Link href="/auth" className={styles.ctaButton}>
               Try It Free – Add Your First Gig in 30 Seconds
             </Link>
