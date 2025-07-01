@@ -263,6 +263,10 @@ function GigsPageContent() {
   const formatEuro = (value: number) => 
     new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
 
+  const getClientUrl = (clientName: string) => {
+    return `/clients/${encodeURIComponent(clientName.toLowerCase().replace(/\s+/g, '-'))}`;
+  };
+
   const getSortIcon = (field: SortField) => {
     if (field !== sortField) return <ArrowUpDown className="w-4 h-4" />;
     return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />;
@@ -330,7 +334,17 @@ function GigsPageContent() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{gig.title}</h3>
-                        <p className="text-sm text-gray-600">{gig.client || 'Unknown Client'}</p>
+                        {gig.client ? (
+                          <Link 
+                            href={getClientUrl(gig.client)}
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {gig.client}
+                          </Link>
+                        ) : (
+                          <p className="text-sm text-gray-600">Unknown Client</p>
+                        )}
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-sm text-gray-700">
@@ -440,9 +454,17 @@ function GigsPageContent() {
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <div className="text-sm text-gray-900">
-                              {gig.client || 'Unknown Client'}
-                            </div>
+                            {gig.client ? (
+                              <Link 
+                                href={getClientUrl(gig.client)}
+                                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {gig.client}
+                              </Link>
+                            ) : (
+                              <div className="text-sm text-gray-900">Unknown Client</div>
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="text-sm text-gray-900">
