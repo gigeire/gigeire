@@ -12,6 +12,7 @@ import { Users, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-rea
 import { GigModal } from "@/components/GigModal";
 import { useToast } from "@/hooks/use-toast";
 import { ensureUserExists } from '@/app/actions/user';
+import { isOverdue } from "@/utils/gigs";
 
 function slugify(name: string) {
   return encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'));
@@ -79,12 +80,12 @@ function getClientDirectory(gigs: Gig[], clientsFromContext: Client[]): ClientEn
 
   clientMap.forEach(entry => {
     entry.outstanding = entry.gigs.reduce((sum, gig) => {
-      if (gig.status === "invoice_sent" || gig.status === "overdue") {
+      if (gig.status === "invoice_sent" || isOverdue(gig)) {
         return sum + (gig.amount || 0);
       }
       return sum;
     }, 0);
-    const dates = entry.gigs.map(g => g.invoice?.dueDate || g.date).filter(Boolean);
+    const dates = entry.gigs.map(g => g.invoice?.due_date || g.date).filter(Boolean);
     entry.lastActivity = dates.length ? dates.sort().reverse()[0] : '';
     const hasUpcoming = entry.gigs.some(g => new Date(g.date) > new Date());
     const hasPaid = entry.gigs.some(g => g.status === "paid");
@@ -98,7 +99,8 @@ function getClientDirectory(gigs: Gig[], clientsFromContext: Client[]): ClientEn
 
 const formatEuro = (value: number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
 
-type SortableMobileKey = 'name' | 'gigs' | 'outstanding';
+type SortableKey = 'name' | 'gigs' | 'outstanding' | 'lastActivity' | 'status';
+type SortDirection = 'asc' | 'desc';
 
 // Custom hook for media query
 function useMediaQuery(query: string) {
@@ -132,7 +134,12 @@ export default function ClientsPage() {
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [gigModalOpen, setGigModalOpen] = useState(false);
   
-  const [sortConfig, setSortConfig] = useState<{ key: SortableMobileKey; direction: 'ascending' | 'descending' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: SortableKey; direction: 'ascending' | 'descending' } | null>(null);
+  
+  // Desktop sorting state (similar to GigsPageContent pattern)
+  const [sortField, setSortField] = useState<SortableKey | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  
   const isMobile = useMediaQuery("(max-width: 640px)"); // sm breakpoint in Tailwind is 640px
 
   const clientsLoading = contextIsLoading === undefined ? true : contextIsLoading;
@@ -193,8 +200,8 @@ export default function ClientsPage() {
     let sortableItems = [...clientDirectoryEntries];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
-        let valA: string | number;
-        let valB: string | number;
+        let valA: string | number | Date;
+        let valB: string | number | Date;
 
         if (sortConfig.key === 'name') {
           valA = a.name.toLowerCase();
@@ -202,9 +209,17 @@ export default function ClientsPage() {
         } else if (sortConfig.key === 'gigs') {
           valA = a.gigs.length;
           valB = b.gigs.length;
-        } else { // outstanding
+        } else if (sortConfig.key === 'outstanding') {
           valA = a.outstanding;
           valB = b.outstanding;
+        } else if (sortConfig.key === 'lastActivity') {
+          valA = a.lastActivity ? new Date(a.lastActivity) : new Date(0);
+          valB = b.lastActivity ? new Date(b.lastActivity) : new Date(0);
+        } else if (sortConfig.key === 'status') {
+          valA = a.status.toLowerCase();
+          valB = b.status.toLowerCase();
+        } else {
+          return 0;
         }
 
         if (valA < valB) {
@@ -219,7 +234,46 @@ export default function ClientsPage() {
     return sortableItems;
   }, [clientDirectoryEntries, sortConfig]);
 
-  const requestSort = (key: SortableMobileKey) => {
+  // Desktop sorted entries
+  const sortedDesktopClientEntries = useMemo(() => {
+    let sortableItems = [...clientDirectoryEntries];
+    if (sortField !== null) {
+      sortableItems.sort((a, b) => {
+        let valA: string | number | Date;
+        let valB: string | number | Date;
+
+        if (sortField === 'name') {
+          valA = a.name.toLowerCase();
+          valB = b.name.toLowerCase();
+        } else if (sortField === 'gigs') {
+          valA = a.gigs.length;
+          valB = b.gigs.length;
+        } else if (sortField === 'outstanding') {
+          valA = a.outstanding;
+          valB = b.outstanding;
+        } else if (sortField === 'lastActivity') {
+          valA = a.lastActivity ? new Date(a.lastActivity) : new Date(0);
+          valB = b.lastActivity ? new Date(b.lastActivity) : new Date(0);
+        } else if (sortField === 'status') {
+          valA = a.status.toLowerCase();
+          valB = b.status.toLowerCase();
+        } else {
+          return 0;
+        }
+
+        if (valA < valB) {
+          return sortDirection === 'asc' ? -1 : 1;
+        }
+        if (valA > valB) {
+          return sortDirection === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [clientDirectoryEntries, sortField, sortDirection]);
+
+  const requestSort = (key: SortableKey) => {
     let direction: 'ascending' | 'descending' = 'ascending';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
@@ -227,7 +281,7 @@ export default function ClientsPage() {
     setSortConfig({ key, direction });
   };
 
-  const getSortIndicator = (key: SortableMobileKey) => {
+  const getSortIndicator = (key: SortableKey) => {
     if (!sortConfig || sortConfig.key !== key) {
       return <ArrowUpDown className="w-3 h-3 ml-1 opacity-50" />;
     }
@@ -235,6 +289,27 @@ export default function ClientsPage() {
       return <ArrowUp className="w-3 h-3 ml-1" />;
     }
     return <ArrowDown className="w-3 h-3 ml-1" />;
+  };
+
+  // Desktop sorting functions (similar to GigsPageContent pattern)
+  const handleSort = (field: SortableKey) => {
+    if (field === sortField) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else {
+        // Reset to default (no sorting) when clicking a third time
+        setSortField(null);
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortableKey) => {
+    if (field !== sortField) return <ArrowUpDown className="w-4 h-4" />;
+    return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />;
   };
 
   if (clientsLoading && clientDirectoryEntries.length === 0) {
@@ -312,21 +387,66 @@ export default function ClientsPage() {
             </tbody>
           </table>
         ) : (
-          // Desktop Table (existing structure with subtle row dividers)
+          // Desktop Table with sorting functionality
           <table className="min-w-full bg-white text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="px-4 py-2 font-semibold text-center">Client Name</th>
+                <th 
+                  className="px-4 py-2 font-semibold text-center cursor-pointer hover:bg-gray-50 transition-colors select-none"
+                  onClick={() => handleSort('name')}
+                  aria-label="Sort by Client Name"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Client Name
+                    {getSortIcon('name')}
+                  </div>
+                </th>
                 <th className="px-4 py-2 font-semibold text-center">Email</th>
                 <th className="px-4 py-2 font-semibold text-center">Phone</th>
-                <th className="px-4 py-2 font-semibold text-center">Gigs</th>
-                <th className="px-4 py-2 font-semibold text-center">Outstanding</th>
-                <th className="px-4 py-2 font-semibold text-center">Last Gig</th>
-                <th className="px-4 py-2 font-semibold text-center">Status</th>
+                <th 
+                  className="px-4 py-2 font-semibold text-center cursor-pointer hover:bg-gray-50 transition-colors select-none"
+                  onClick={() => handleSort('gigs')}
+                  aria-label="Sort by Number of Gigs"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Gigs
+                    {getSortIcon('gigs')}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-2 font-semibold text-center cursor-pointer hover:bg-gray-50 transition-colors select-none"
+                  onClick={() => handleSort('outstanding')}
+                  aria-label="Sort by Outstanding Amount"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Outstanding
+                    {getSortIcon('outstanding')}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-2 font-semibold text-center cursor-pointer hover:bg-gray-50 transition-colors select-none"
+                  onClick={() => handleSort('lastActivity')}
+                  aria-label="Sort by Last Gig Date"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Last Gig
+                    {getSortIcon('lastActivity')}
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-2 font-semibold text-center cursor-pointer hover:bg-gray-50 transition-colors select-none"
+                  onClick={() => handleSort('status')}
+                  aria-label="Sort by Status"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Status
+                    {getSortIcon('status')}
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {clientDirectoryEntries.map(clientEntry => (
+              {sortedDesktopClientEntries.map(clientEntry => (
                 <tr key={clientEntry.id} className="border-b border-gray-200/50 hover:bg-gray-50 transition">
                   <td className="px-4 py-2 font-medium text-green-800 text-center">
                     <Link href={`/clients/${slugify(clientEntry.name)}`} className="hover:underline inline-flex items-center gap-1">
