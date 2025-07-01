@@ -214,10 +214,8 @@ function GigsPageContent() {
           bValue = b.title.toLowerCase();
           break;
         case 'client':
-          const aClient = clients.find(c => c.id === a.client_id)?.name || '';
-          const bClient = clients.find(c => c.id === b.client_id)?.name || '';
-          aValue = aClient.toLowerCase();
-          bValue = bClient.toLowerCase();
+          aValue = (a.client || '').toLowerCase();
+          bValue = (b.client || '').toLowerCase();
           break;
         case 'date':
           aValue = new Date(a.date);
@@ -320,7 +318,6 @@ function GigsPageContent() {
               })()
             ) : (
               sortedGigs.map((gig) => {
-                const client = clients.find(c => c.id === gig.client_id);
                 const displayStatus = getDisplayStatus(gig);
                 const statusKey = getStatusKey(gig);
 
@@ -333,7 +330,7 @@ function GigsPageContent() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{gig.title}</h3>
-                        <p className="text-sm text-gray-600">{client?.name || 'Unknown Client'}</p>
+                        <p className="text-sm text-gray-600">{gig.client || 'Unknown Client'}</p>
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-sm text-gray-700">
@@ -423,7 +420,6 @@ function GigsPageContent() {
                     </tr>
                   ) : (
                     sortedGigs.map((gig) => {
-                      const client = clients.find(c => c.id === gig.client_id);
                       const displayStatus = getDisplayStatus(gig);
                       const statusKey = getStatusKey(gig);
                       
@@ -445,7 +441,7 @@ function GigsPageContent() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="text-sm text-gray-900">
-                              {client?.name || 'Unknown Client'}
+                              {gig.client || 'Unknown Client'}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
