@@ -19,7 +19,7 @@ export default function MarketingPage() {
               <span className={styles.tagline}>The Irish Creatives' App</span>
             </div>
             <h1>Built for Creators Who Actually Want to Create</h1>
-            <p>The business app that actually gets creatives. Manage gigs, clients, and payments without killing your creative buzz.</p>
+            <p>The business app that actually gets creatives. Manage gigs, clients, and payments without killing your creative buzz. </p>
             <Link href="/auth" className={styles.ctaButton}>
               Start Creating, Not Managing
             </Link>
