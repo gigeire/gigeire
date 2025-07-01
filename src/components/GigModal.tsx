@@ -155,13 +155,6 @@ export function GigModal({
     if (!currentClientInput.trim()) newErrors.client_id = "Client is required";
     if (!values.date) {
       newErrors.date = "Date is required";
-    } else {
-      // To avoid timezone issues, compare date strings in YYYY-MM-DD format.
-      const today = new Date().toISOString().split('T')[0];
-      const inputDate = new Date(values.date).toISOString().split('T')[0];
-      if (inputDate < today) {
-          newErrors.date = "Date must be today or later";
-      }
     }
     if (typeof values.amount !== 'number' || isNaN(values.amount) || values.amount <= 0) newErrors.amount = "Amount must be a positive number";
     return newErrors;

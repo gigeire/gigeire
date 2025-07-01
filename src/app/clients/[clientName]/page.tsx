@@ -28,7 +28,8 @@ import { useInvoices } from "@/context/InvoicesContext";
 import { useClientDocuments } from "@/context/ClientDocumentsContext";
 
 function unslugify(slug: string) {
-  return decodeURIComponent(slug.replace(/-/g, ' '));
+  // First decode URI component, then replace hyphens with spaces
+  return decodeURIComponent(slug).replace(/-/g, ' ');
 }
 
 // Improved Irish name capitalization

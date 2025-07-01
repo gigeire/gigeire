@@ -27,7 +27,12 @@ import { StandardInvoiceModal } from "./StandardInvoiceModal";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
-import { isOverdue, getDisplayStatus, getStatusKey } from "@/utils/gigs";
+
+function isOverdue(gig: Gig): boolean {
+  if (gig.status !== "invoice_sent" || !gig.invoice || !gig.invoice.dueDate) return false;
+  const dueDate = new Date(gig.invoice.dueDate);
+  return dueDate < new Date();
+}
 
 function getDueDateText(gig: Gig): string | null {
   if (gig.status !== "invoice_sent" || !gig.invoice || !gig.invoice.dueDate) return null;
@@ -72,7 +77,18 @@ export function GigCard({ gig, onEdit, onClone, onDelete, onStatusChange }: GigC
     return true;
   }, [senderInfo, senderInfoLoading]);
 
-  const displayStatus = getDisplayStatus(gig);
+  const getDisplayStatus = (status: GigStatus): string => {
+    if (isInvoiceOverdue) return "Overdue";
+    switch (status) {
+      case "inquiry": return "Inquiry";
+      case "confirmed": return "Confirmed";
+      case "invoice_sent": return "Invoice Sent";
+      case "paid": return "Paid";
+      case "overdue": return "Overdue";
+      default: return status;
+    }
+  };
+  const displayStatus = getDisplayStatus(gig.status);
 
   const handleEdit = () => {
     if (onEdit) {
@@ -228,7 +244,7 @@ export function GigCard({ gig, onEdit, onClone, onDelete, onStatusChange }: GigC
             {gig.location && <span>{gig.location}</span>}
             {gig.client && <span className="mx-1">•</span>}
             {gig.client_id && gig.client ? (
-              <Link href={`/clients/${encodeURIComponent(gig.client.toLowerCase().replace(/ /g, '-'))}`} 
+              <Link href={`/clients/${encodeURIComponent(gig.client.toLowerCase().replace(/\s+/g, '-'))}`} 
                     className="hover:underline hover:text-gray-700 cursor-pointer">
                 {gig.client}
               </Link>
@@ -240,7 +256,7 @@ export function GigCard({ gig, onEdit, onClone, onDelete, onStatusChange }: GigC
             <span>{formatDate(gig.date)}</span>
             <span>{gig.location}</span>
             {gig.client_id && gig.client ? (
-              <Link href={`/clients/${encodeURIComponent(gig.client.toLowerCase().replace(/ /g, '-'))}`} 
+              <Link href={`/clients/${encodeURIComponent(gig.client.toLowerCase().replace(/\s+/g, '-'))}`} 
                     className="hover:underline hover:text-gray-700 cursor-pointer">
                 {gig.client}
               </Link>

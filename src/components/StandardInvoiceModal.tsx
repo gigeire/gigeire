@@ -86,13 +86,6 @@ export function StandardInvoiceModal({
     
     if (!dueDate) {
       newErrors.dueDate = "Due date is required";
-    } else {
-      const selectedDate = new Date(dueDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) {
-        newErrors.dueDate = "Due date must be today or later";
-      }
     }
     
     if (!gig?.client || !gig?.client.trim()) {
