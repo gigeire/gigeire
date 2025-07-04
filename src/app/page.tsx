@@ -138,7 +138,8 @@ export default function MarketingPage() {
           <h2>Track. Invoice. Get Paid. <span className="whitespace-nowrap">All From Your Phone.</span></h2>
           <p className={styles.gallerySubhead}>
             See why freelancers are switching to GigÉire.
-            <br />
+          </p>
+          <p className={`${styles.gallerySubhead} ${styles.mobileOnly}`}>
             Swipe below to see how it works.
           </p>
 
