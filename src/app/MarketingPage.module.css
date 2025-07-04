@@ -603,12 +603,15 @@
     }
     .gallerySwipe .galleryCard {
         flex: 0 0 calc(100% - 2rem);
-        scroll-snap-align: start;
+        scroll-snap-align: center;
         text-align: center;
         margin-right: 1rem;
     }
+    .gallerySwipe .galleryCard:first-child {
+        margin-left: 1rem;
+    }
     .gallerySwipe .galleryCard:last-child {
-        margin-right: 0;
+        margin-right: 2rem;
     }
     .galleryCaption {
         font-size: 0.9rem;
@@ -658,12 +661,16 @@
     }
     .gallerySwipe .galleryCard {
         flex: 0 0 calc(100% - 1.5rem);
+        scroll-snap-align: center;
         max-width: none;
         text-align: center;
         margin-right: 0.75rem;
     }
+    .gallerySwipe .galleryCard:first-child {
+        margin-left: 0.75rem;
+    }
     .gallerySwipe .galleryCard:last-child {
-        margin-right: 0;
+        margin-right: 2rem;
     }
     .galleryCaption {
         font-size: 0.85rem;
