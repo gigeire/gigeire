@@ -54,3 +54,8 @@
     /* overflow-x: hidden; redundant if applied globally above, but safe to keep if specific overrides exist elsewhere */
   }
 }
+
+/* Utility class for preventing text wrapping */
+.whitespace-nowrap {
+  white-space: nowrap;
+}

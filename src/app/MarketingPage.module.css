@@ -749,7 +749,4 @@
     font-weight: 700 !important;
 }
 
-/* Utility class for preventing text wrapping */
-:global(.whitespace-nowrap) {
-    white-space: nowrap;
-} 
+ 
