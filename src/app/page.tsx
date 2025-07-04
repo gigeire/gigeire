@@ -75,7 +75,7 @@ export default function MarketingPage() {
 
       {/* Problem Section */}
       <section className={styles.section}>
-        <h2>GigÉire handles the boring stuff so you can focus on the fun stuff</h2>
+        <h2>We handle the boring stuff so you stay in your flow.</h2>
         <div className={styles.problemCards}>
           <div className={styles.problemCard}>
             <h3>😤 Spreadsheet Hell</h3>
@@ -95,7 +95,7 @@ export default function MarketingPage() {
           </div>
         </div>
         <p style={{ textAlign: 'center', marginTop: '2rem', fontSize: '1.15rem', color: '#4B5563' }}>
-          👇 That's why GigÉire keeps everything — clients, gigs, payments — in one clean place.
+          👇 That's why GigÉire keeps everything — clients, gigs, payments — in one clean place 👇
         </p>
       </section>
 
@@ -103,7 +103,7 @@ export default function MarketingPage() {
       <section className={styles.features}>
         <div className={styles.featuresGrid}>
           <h2 style={{ gridColumn: '1/-1', fontSize: '2.5rem', textAlign: 'center', marginBottom: '3rem', color: '#1f2937' }}>
-            Everything You Need, Nothing You Don't
+            Everything You Need, Nothing You Don't.
           </h2>
           <div className={styles.featureCard}>
             <h3>🎯 Smart Gig Tracking</h3>
@@ -132,14 +132,88 @@ export default function MarketingPage() {
         </div>
       </section>
 
+      {/* Product Gallery Section */}
+      <section className={styles.productGallerySection}>
+        <div className={styles.galleryContent}>
+          <h2>Track. Invoice. Get Paid. <span className="whitespace-nowrap">All From Your Phone.</span></h2>
+          <p className={styles.gallerySubhead}>
+            See why freelancers are switching to GigÉire.
+            <br />
+            Swipe below to see how it works.
+          </p>
+
+          {/* Mobile Navigation Arrows */}
+          <div className={`${styles.galleryNavArrows} ${styles.left}`}></div>
+          <div className={`${styles.galleryNavArrows} ${styles.right}`}></div>
+
+          {/* Desktop Grid */}
+          <div className={styles.galleryGrid}>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Know Where You Stand at a Glance</p>
+              <img src="/images/1.png" alt="Dashboard Overview" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Add a New Gig in Under 30 Seconds</p>
+              <img src="/images/2.png" alt="Add New Gig" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Filter Gigs Fast — No Scrolling Needed</p>
+              <img src="/images/3.png" alt="All Gigs View" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Send a Branded Invoice in Seconds</p>
+              <img src="/images/4.png" alt="Create Invoice" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Keep Full Client Histories in One Place</p>
+              <img src="/images/5.png" alt="Client Profile" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Spot Income Gaps with Instant Insights</p>
+              <img src="/images/6.png" alt="Analytics Dashboard" className={styles.galleryImage} />
+            </div>
+          </div>
+
+          {/* Mobile Swipe */}
+          <div className={styles.gallerySwipe}>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Know Where You Stand at a Glance</p>
+              <img src="/images/1.png" alt="Dashboard Overview" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Add a New Gig in Under 30 Seconds</p>
+              <img src="/images/2.png" alt="Add New Gig" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Filter Gigs Fast — No Scrolling Needed</p>
+              <img src="/images/3.png" alt="All Gigs View" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Send a Branded Invoice in Seconds</p>
+              <img src="/images/4.png" alt="Create Invoice" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Keep Full Client Histories in One Place</p>
+              <img src="/images/5.png" alt="Client Profile" className={styles.galleryImage} />
+            </div>
+            <div className={styles.galleryCard}>
+              <p className={styles.galleryCaption}>Spot Income Gaps with Instant Insights</p>
+              <img src="/images/6.png" alt="Analytics Dashboard" className={styles.galleryImage} />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className={styles.finalCta}>
         <div className={styles.finalCtaContent}>
           <h2 style={{ fontSize: '2.5rem', color: 'white', marginBottom: '2rem' }}>
             Ready to Get Your Life Back?
           </h2>
-          <p style={{ fontSize: '1.2rem', marginBottom: '2rem', opacity: 0.9 }}>
-            Join fellow creatives who've ditched the spreadsheets and reclaimed their creative energy.
+          <p style={{ fontSize: '1.2rem', marginBottom: '1.5rem', opacity: 0.9 }}>     
+          No training. No complex setup. Just open your phone and go.
+          <br />  
+          Join fellow creatives who've ditched the spreadsheets and reclaimed their creative energy.
           </p>
           <Link href="/auth" className={styles.ctaButton}>
             Start Your Free Trial
