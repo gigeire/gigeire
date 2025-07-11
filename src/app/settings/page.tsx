@@ -9,10 +9,12 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const { toast } = useToast();
 
   // State for Stripe checkout process
   const [stripeCheckoutLoading, setStripeCheckoutLoading] = useState(false);
@@ -146,8 +148,48 @@ export default function SettingsPage() {
   };
 
   const handleReferFriendClick = () => {
-    const mailtoLink = "mailto:hello@gigeire.com?subject=Referral&body=Hi! I want to refer a freelancer: [Insert Name + Email]";
-    window.location.href = mailtoLink;
+    const subject = "Referral";
+    const body = "Hi! I want to refer a freelancer: [Insert Name + Email]";
+    const mailtoLink = `mailto:hello@gigeire.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // Try to open mailto link
+    const mailtoWindow = window.open(mailtoLink, '_self');
+    
+    // Check if we're likely on a desktop environment where mailto might fail
+    const isDesktop = window.innerWidth > 768 && !('ontouchstart' in window);
+    
+    if (isDesktop) {
+      // Set a timeout to check if mailto worked
+      setTimeout(() => {
+        // If we're still on the same page, mailto likely failed
+        // Provide a fallback option
+        const emailText = `To: hello@gigeire.com\nSubject: ${subject}\nBody: ${body}`;
+        
+        if (navigator.clipboard && window.isSecureContext) {
+          // Copy to clipboard if available
+          navigator.clipboard.writeText(emailText).then(() => {
+            toast({
+              title: "📧 Email details copied to clipboard!",
+              description: "Paste into your email client or send via your preferred email service.",
+            });
+          }).catch(() => {
+            // Fallback if clipboard fails
+            showEmailFallback(subject, body);
+          });
+        } else {
+          // Show fallback modal/alert
+          showEmailFallback(subject, body);
+        }
+      }, 500); // Give mailto a moment to potentially work
+    }
+  };
+
+  const showEmailFallback = (subject: string, body: string) => {
+    const message = `📧 Please send an email manually:\n\nTo: hello@gigeire.com\nSubject: ${subject}\nMessage: ${body}\n\nOr use your preferred email service.`;
+    toast({
+      title: "📧 Email details not copied",
+      description: message,
+    });
   };
 
   const supportEmail = "hello@gigeire.com";
@@ -173,9 +215,9 @@ export default function SettingsPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-4 justify-center">
                     <Crown className="w-7 h-7 text-amber-500 fill-amber-400" strokeWidth={1} />
-                    <h2 className="text-xl font-bold text-gray-800">Premium Plan</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Premium Plan</h2>
                   </div>
-                  <p className="text-sm text-gray-500 mb-6">
+                  <p className="text-sm text-gray-600 mb-6">
                     Unlimited gigs — thank you for supporting GigÉire!
                   </p>
                 </div>
@@ -198,9 +240,9 @@ export default function SettingsPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-4 justify-center">
                     <Crown className="w-7 h-7 text-amber-600" strokeWidth={2} />
-                    <h2 className="text-xl font-bold text-gray-800">Free Plan</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Free Plan</h2>
                   </div>
-                  <p className="text-sm text-gray-500 mb-6">
+                  <p className="text-sm text-gray-600 mb-6">
                     Limited to 10 gigs total. Upgrade to unlock unlimited gigs and support our development!
                   </p>
                 </div>
@@ -216,14 +258,14 @@ export default function SettingsPage() {
               </>
             ) : (
               <div className="py-4 h-full flex flex-col justify-center items-center">
-                <h2 className="text-xl font-bold text-gray-800 mb-2">Plan Information</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Plan Information</h2>
                 {planFetchError ? (
                   <>
                     <p className="text-sm text-red-600 mb-1">Could not load your plan details.</p>
-                    <p className="text-xs text-gray-500 mb-4">Error: {planFetchError}</p>
+                    <p className="text-xs text-gray-600 mb-4">Error: {planFetchError}</p>
                   </>
                 ) : (
-                  <p className="text-sm text-gray-500 mb-4">We could not determine your current plan.</p>
+                  <p className="text-sm text-gray-600 mb-4">We could not determine your current plan.</p>
                 )}
                 <a
                   href={`mailto:${supportEmail}?subject=Help with my Plan`}
@@ -246,11 +288,14 @@ export default function SettingsPage() {
           <section className="bg-white rounded-2xl shadow p-6 md:p-8 flex flex-col justify-between items-center text-center h-full">
             <div>
               <div className="flex items-center gap-2 mb-4 justify-center">
-                <Gift className="w-6 h-6 text-pink-500" aria-hidden="true" />
-                <h2 className="text-xl font-bold text-gray-800">Refer a Friend</h2>
+                <Gift className="w-7 h-7 text-pink-500" aria-hidden="true" />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  <span className="md:hidden">Refer a Friend</span>
+                  <span className="hidden md:inline">Refer a Friend - Get a Month Free!</span>
+                </h2>
               </div>
-              <p className="text-sm text-gray-500 mb-6">
-                Invite a freelancer. You both get 1 free month of Premium.
+              <p className="text-sm text-gray-600 mb-6">
+                Click "Refer a Friend" — it'll copy a message you can paste into an email to hello@gigeire.com 📩. Once they sign up, you'll both get a free month of Premium.
               </p>
             </div>
             <Button
@@ -266,13 +311,14 @@ export default function SettingsPage() {
         {/* Other sections: Support, Follow Us, Account & Privacy, Logout */}
         <div className="mt-8 space-y-6">
           <section className="bg-white rounded-2xl shadow p-6 md:p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <MessageCircle className="w-6 h-6 text-green-500" />
-              <h2 className="text-xl font-bold text-gray-800">Support</h2>
+            <div className="flex items-center gap-2 mb-4">
+              <MessageCircle className="w-7 h-7 text-green-500" />
+              <h2 className="text-lg font-semibold text-gray-900">Support</h2>
             </div>
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-gray-500" />
-              <span className="text-gray-600">Need help? Have product feedback? Contact us at</span>
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div>
+                <span className="text-sm text-gray-600">Need help? Have product feedback? Contact us at</span>
+              </div>
               <a
                 href="mailto:hello@gigeire.com"
                 className="text-green-600 hover:text-green-700 font-medium underline"
@@ -283,13 +329,13 @@ export default function SettingsPage() {
           </section>
 
           <section className="bg-white rounded-2xl shadow p-6 md:p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <Instagram className="w-6 h-6 text-pink-500" />
-              <h2 className="text-xl font-bold text-gray-800">Follow Us</h2>
+            <div className="flex items-center gap-2 mb-4">
+              <Instagram className="w-7 h-7 text-pink-500" />
+              <h2 className="text-lg font-semibold text-gray-900">Follow Us</h2>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
-                <p className="text-gray-600">See app tips, updates and memes — follow us on Instagram.</p>
+                <p className="text-sm text-gray-600">See app tips, updates and memes — follow us on Instagram.</p>
               </div>
               <a
                 href="https://instagram.com/gigeire"
@@ -304,7 +350,7 @@ export default function SettingsPage() {
           </section>
 
           <section className="bg-white rounded-2xl shadow p-6 md:p-8">
-            <h2 className="textxl font-bold text-gray-800 mb-6">Account & Privacy</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Account & Privacy</h2>
             <div className="space-y-4">
               <Link
                 href="/privacy-policy"
@@ -330,10 +376,10 @@ export default function SettingsPage() {
           </section>
 
           <section className="bg-white rounded-2xl shadow p-6 md:p-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">Account Actions</h2>
-                <p className="text-gray-500">Sign out of your GigÉire account</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Account Actions</h2>
+                <p className="text-sm text-gray-600">Sign out of your GigÉire account</p>
               </div>
               <Button
                 onClick={handleLogout}
